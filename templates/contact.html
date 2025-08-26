@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Contactos{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+  <div class="card shadow p-4">
+    <h2 class="mb-4">Formulario de Contacto</h2>
+    <form class="needs-validation" novalidate action="/contact" method="post">
+
+      <!-- Nombre -->
+      <div class="mb-3">
+        <label for="nombre" class="form-label">Nombres <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="nombre" name="nombre" required>
+        <div class="invalid-feedback">Este campo es obligatorio</div>
+      </div>
+
+      <!-- Email -->
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="email@ejemplo.com" required>
+        <div class="invalid-feedback">Ingrese un correo válido</div>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="mb-3">
+        <label for="telefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
+        <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+593 987654321" pattern="[+0-9\s]{7,15}" required>
+        <div class="invalid-feedback">Ingrese un número de teléfono válido</div>
+      </div>
+
+      <!-- Asunto -->
+      <div class="mb-3">
+        <label for="asunto" class="form-label">Asunto <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="asunto" name="asunto" placeholder="Escriba el asunto de su mensaje" required>
+        <div class="invalid-feedback">Por favor, indique el asunto</div>
+      </div>
+
+      <!-- Mensaje -->
+      <div class="mb-3">
+        <label for="mensaje" class="form-label">Mensaje(Opcional) <span class="text-danger"></span></label>
+        <textarea class="form-control" id="mensaje" name="mensaje" rows="4"></textarea>
+      </div>
+
+      <!-- Botón -->
+      <button type="submit" class="btn btn-dark w-100">Enviar</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

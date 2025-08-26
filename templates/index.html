@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<!-- carrusel de fotos -->
+  <div id="carouselExampleIndicators" class="carousel slide">
+    <div class="carousel-indicators">
+      <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+      <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+      <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    </div>
+    <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="{{ url_for('static', filename='img/portada1.jpeg') }}" class="d-block w-100" alt="..." >
+          
+          <div class="carousel-caption d-none d-md-block">
+            <h5>SUBLIMACION</h5>
+            <p>Imprime colores vibrantes y diseños únicos en tu ropa deportiva con nuestra tecnología de sublimación.</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <img src="{{ url_for('static', filename='img/sublimacion.jpg') }}" class="d-block w-100" alt="...">
+          <div class="carousel-caption d-none d-md-block">
+            <h5>CONFECCION</h5>
+            <p>Confeccionamos tu equipación deportiva 100% personalizada, para que tu equipo luzca único.</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <img src="{{ url_for('static', filename='img/bordados.jpg') }}" class="d-block w-100" alt="...">
+          <div class="carousel-caption d-none d-md-block">
+            <h5>BORDADO PERSONALIZADOS</h5>
+            <p>Bordados 100% personalizados, llevan tu logo, nombre o diseño directamente en tus prendas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+  </div>
+
+<div class="text-center my-5 banner-salo">
+  <h2 class="fw-bold mb-3">CONFECCIONA CON SALO SPORT</h2>
+  <h3 class="mb-4 fst-italic">Siente la emoción de tu propio estilo…!!!</h3>
+  <p class="lead mx-auto" style="max-width: 700px;">
+    Transformamos tus ideas en equipaciones deportivas <strong>100% personalizadas</strong>, combinando diseño, comodidad y resistencia para que tu equipo destaque dentro y fuera del campo.
+  </p>
+</div>
+{% endblock %}
