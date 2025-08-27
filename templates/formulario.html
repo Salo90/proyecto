@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Formulario de Producto{% endblock %}
+{% block content %}
+<h2>{{ titulo }}</h2>
+<form method="POST">
+  {{ form.hidden_tag() }}
+  <div class="grid two">
+    <div class="form-row">
+      {{ form.nombre.label }}<br>
+      {{ form.nombre(class_="input") }}
+      {% for e in form.nombre.errors %}<div class="small" style="color:#ff9a9a">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-row">
+      {{ form.categoria_id.label }}<br>
+      {{ form.categoria_id(class_="input") }}
+      {% for e in form.categoria_id.errors %}<div class="small" style="color:#ff9a9a">{{ e }}</div>{% endfor %}
+    </div>
+  </div>
+  <div class="form-row">
+    {{ form.descripcion.label }}<br>
+    {{ form.descripcion(class_="input") }}
+    {% for e in form.descripcion.errors %}<div class="small" style="color:#ff9a9a">{{ e }}</div>{% endfor %}
+  </div>
+  <div class="grid two">
+    <div class="form-row">
+      {{ form.cantidad.label }}<br>
+      {{ form.cantidad(class_="input") }}
+      {% for e in form.cantidad.errors %}<div class="small" style="color:#ff9a9a">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-row">
+      {{ form.precio_unitario.label }}<br>
+      {{ form.precio_unitario(class_="input") }}
+      {% for e in form.precio_unitario.errors %}<div class="small" style="color:#ff9a9a">{{ e }}</div>{% endfor %}
+    </div>
+  </div>
+  <button class="btn" type="submit">Guardar</button>
+  <a class="btn secondary" href="{{ url_for('productos_list') }}">Cancelar</a>
+</form>
+{% endblock %}

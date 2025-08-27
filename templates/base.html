@@ -31,15 +31,26 @@
           <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Inicio</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">Acerca de</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}">Contacto</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('productos_list') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('productos') else '' }}">Productos</a></li>
+          <span class="small">CSRF: Flask‑WTF activo</span>
         </ul>
       </div>
     </div>
   </nav>
+{% with msgs = get_flashed_messages(with_categories=true) %}
+      {% if msgs %}
+        {% for cat, m in msgs %}
+          <div class="flash {{ 'ok' if cat=='success' else 'err' }}">{{ m }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
+    
   <!-- Contenido principal -->
   <main class="container-fluid">
     {% block content %}{% endblock %}
   </main>
+
 
   <!-- Footer -->
   <footer class="bg-light text-center py-3 mt-auto border-top">
