@@ -1,0 +1,8 @@
+venv/
+myenv/
+*.pyc
+*.pyo
+*.pyd
+# archivos 
+*.log
+*.bd
