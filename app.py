@@ -1,5 +1,4 @@
 # app.py
-
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, DecimalField, SelectField, SubmitField
@@ -7,6 +6,7 @@ from wtforms.validators import DataRequired, NumberRange
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from dataclasses import dataclass
+from models import db, Producto  # Ajusta según tu estructura
 
 # === 1. Crear db SIN app ===
 db = SQLAlchemy()
@@ -120,9 +120,18 @@ def contact():
 
 @app.route('/productos')
 def productos_list():
-    productos = Producto.query.order_by(Producto.id.desc()).all()
-    inventario_cache.cargar(productos)
-    return render_template("productos_list.html", productos=productos)
+    # Obtener el término de búsqueda
+    q = request.args.get('q', '').strip()
+
+    # Construir consulta
+    query = Producto.query
+
+    if q:
+        query = query.filter(Producto.nombre.ilike(f'%{q}%'))
+
+    productos = query.all()  # Puedes usar .paginate() si deseas paginación
+
+    return render_template('productos_list.html', productos=productos)
 
 @app.route("/productos/nuevo", methods=["GET", "POST"])
 def productos_new_wtf():
@@ -144,33 +153,7 @@ def productos_new_wtf():
     
     return render_template("formulario.html", form=form, titulo="Nuevo producto")
 
-@app.route("/productos/nuevo-manual", methods=["GET", "POST"])
-def productos_new_manual():
-    if request.method == "POST":
-        nombre = request.form.get("nombre", "").strip()
-        categoria_id = request.form.get("categoria_id", type=int)
-        descripcion = request.form.get("descripcion", "")
-        cantidad = request.form.get("cantidad", type=int, default=0)
-        precio = request.form.get("precio_unitario", type=float, default=0.0)
 
-        if not nombre or not categoria_id:
-            flash("Nombre y categoría son obligatorios.", "error")
-            return redirect(url_for("productos_new_manual"))
-
-        p = Producto(
-            nombre=nombre,
-            categoria_id=categoria_id,
-            descripcion=descripcion,
-            cantidad=cantidad,
-            precio_unitario=precio
-        )
-        db.session.add(p)
-        db.session.commit()
-        flash("Producto creado (captura manual).", "success")
-        return redirect(url_for("productos_list"))
-
-    categorias = Categoria.query.order_by(Categoria.nombre).all()
-    return render_template("productos_manual.html", categorias=categorias)
 
 @app.route("/productos/<int:pid>/editar", methods=["GET", "POST"])
 def productos_edit(pid):
