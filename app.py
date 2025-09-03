@@ -7,6 +7,10 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from dataclasses import dataclass
 from models import db, Producto  # Ajusta según tu estructura
+from werkzeug.security import generate_password_hash, check_password_hash
+from wtforms import PasswordField, BooleanField
+from wtforms.validators import Email
+
 
 # === 1. Crear db SIN app ===
 db = SQLAlchemy()
@@ -47,6 +51,18 @@ class Producto(db.Model):
     cantidad = db.Column(db.Integer, nullable=False, default=0)
 
     categoria = db.relationship("Categoria", backref="productos")
+
+class Usuario(db.Model):
+    __tablename__ = "usuario"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 # ---------------------------------------------
 # Caché en memoria
@@ -98,6 +114,12 @@ class ProductoForm(FlaskForm):
     )
     categoria_id = SelectField("Categoría", coerce=int, validators=[DataRequired()])
     submit = SubmitField("Guardar")
+
+class LoginForm(FlaskForm):
+    email = StringField("Correo electrónico", validators=[DataRequired(), Email()])
+    password = PasswordField("Contraseña", validators=[DataRequired()])
+    remember = BooleanField("Recordarme")
+    submit = SubmitField("Iniciar sesión")
 
 # ---------------------------------------------
 # Rutas
@@ -195,6 +217,28 @@ with app.app_context():
         print("✅ Categorías iniciales creadas.")
     else:
         print("ℹ️  Categorías ya existen.")
+
+# Crear usuario admin si no existe
+    if Usuario.query.filter_by(email="admin@admin.com").first() is None:
+        admin = Usuario(email="admin@admin.com")
+        admin.set_password("1234")  # Puedes cambiar la contraseña
+        db.session.add(admin)
+        db.session.commit()
+        print("✅ Usuario admin creado.")
+    else:
+        print("ℹ️ Usuario admin ya existe.")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        usuario = Usuario.query.filter_by(email=form.email.data).first()
+        if usuario and usuario.check_password(form.password.data):
+            flash("Inicio de sesión exitoso", "success")
+            return redirect(url_for("index"))
+        else:
+            flash("Correo o contraseña incorrectos", "danger")
+    return render_template('login.html', form=form)
 
 # Iniciar app
 if __name__ == '__main__':

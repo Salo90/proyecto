@@ -10,22 +10,41 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial
 .site-footer { border-top: 1px solid #e7eaf0; padding: 1rem; text-align: center; color: #666; }
 */
 
-/* Logo más grande solo para navbar */
 .logo-custom {
-    height: 50px; /* tamaño del logo */
-    width: auto;
-}
-
-/* Navbar links hover */
-.navbar-nav .nav-link {
-    margin-left: 1rem;
-    font-weight: 500;
-    transition: color 0.3s;
-}
-.navbar-nav .nav-link:hover {
-    color: #ffc107;
-}
-
+      height: 40px;
+      width: auto;
+    }
+    
+    @media (max-width: 575.98px) {
+      .logo-custom {
+        height: 35px;
+      }
+    }
+    
+    @media (min-width: 992px) {
+      .logo-custom {
+        height: 50px;
+      }
+    }
+    
+    .flash {
+      padding: 0.75rem 1.25rem;
+      margin-bottom: 1rem;
+      border: 1px solid transparent;
+      border-radius: 0.375rem;
+    }
+    
+    .flash.ok {
+      color: #0f5132;
+      background-color: #d1e7dd;
+      border-color: #badbcc;
+    }
+    
+    .flash.err {
+      color: #842029;
+      background-color: #f8d7da;
+      border-color: #f5c2c7;
+    }
 /* Contenido principal */
 main.container {
     margin-top: 2rem;

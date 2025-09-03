@@ -11,33 +11,54 @@
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   {% block extra_css %}{% endblock %}
+
 </head>
 <body class="d-flex flex-column min-vh-100">
 
   <!-- Navbar sticky -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='img/logoEmpresa.png') }}" alt="Logo" class="me-2 logo-custom">
-      </a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+  <div class="container">
+    <!-- Logo -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="{{ url_for('static', filename='img/logoEmpresa.png') }}" alt="Logo" class="me-2 logo-custom">
+    </a>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-              aria-controls="navbarNav" aria-expanded="false" aria-label="Menú de navegación">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+    <!-- Botón para móviles -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Menú de navegación">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Inicio</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">Acerca de</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}">Contacto</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('productos_list') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('productos') else '' }}">Productos</a></li>
-          <span class="small">CSRF: Flask‑WTF activo</span>
-        </ul>
+    <!-- Contenido colapsable -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <!-- Menú de navegación -->
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('index') }}">Inicio</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('about') }}">Acerca de</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('contact') }}">Contacto</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="{{ url_for('productos_list') }}">Productos</a>
+        </li>
+      </ul>
+
+      <!-- Botón de login -->
+      <div class="d-flex align-items-center ms-lg-3 mt-2 mt-lg-0">
+        <a class="btn btn-outline-light" href="{{ url_for('login') }}" title="Iniciar sesión">
+          <i class="bi bi-person-circle"></i>
+          <span class="d-none d-sm-inline ms-1">Iniciar sesión</span>
+        </a>
       </div>
     </div>
-  </nav>
-{% with msgs = get_flashed_messages(with_categories=true) %}
+  </div>
+</nav>
+  
+  {% with msgs = get_flashed_messages(with_categories=true) %}
       {% if msgs %}
         {% for cat, m in msgs %}
           <div class="flash {{ 'ok' if cat=='success' else 'err' }}">{{ m }}</div>
@@ -45,12 +66,22 @@
       {% endif %}
     {% endwith %}
 
-    
-  <!-- Contenido principal -->
-  <main class="container-fluid">
-    {% block content %}{% endblock %}
-  </main>
+  <!-- Flash messages 
+  <div class="container-fluid">
+    <div class="flash ok">
+      Ejemplo de mensaje flash de éxito
+    </div>
+    <div class="flash err">
+      Ejemplo de mensaje flash de error
+    </div>-->
 
+    <!-- Contenido principal -->
+    <main class="container-fluid py-4">
+      <div class="text-center">
+              {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
 
   <!-- Footer -->
   <footer class="bg-light text-center py-3 mt-auto border-top">
@@ -76,8 +107,8 @@
       });
     })();
   </script>
-<!-- Bootstrap JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
-  {% block extra_js %}{% endblock %}
+
+ {% block extra_js %}{% endblock %}
+
 </body>
 </html>
