@@ -4,31 +4,41 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-4">{{ titulo }}</h2>
-
+  <h2 class="mb-4">Actualizar Producto</h2>
   <form method="POST">
     {{ form.hidden_tag() }}
 
     <!-- Grid de dos columnas -->
+    <!-- Código -->
+    <div class="col-md-6">
+      {{ form.codigo.label(class="form-label fw-bold") }}
+      {{ form.codigo(class="form-control" + (" is-invalid" if form.codigo.errors else "")) }}
+      {% if form.codigo.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.codigo.errors %}{{ error }}{% endfor %}
+    </div>
+  {% endif %}
+</div>
+
     <div class="row g-3 mb-3">
       <!-- Nombre -->
       <div class="col-md-6">
         {{ form.nombre.label(class="form-label fw-bold") }}
-        {{ form.nombre(class="form-control" + (" is-invalid" if form.nombre.errors else "")) }}
-        {% if form.nombre.errors %}
+          {{ form.nombre(class="form-control" + (" is-invalid" if form.nombre.errors else ""), required=True) }}
+          {% if form.nombre.errors %}
           <div class="invalid-feedback">
             {% for error in form.nombre.errors %}{{ error }}{% endfor %}
           </div>
         {% endif %}
-      </div>
+    </div>
 
       <!-- Categoría -->
       <div class="col-md-6">
-        {{ form.categoria_id.label(class="form-label fw-bold") }}
-        {{ form.categoria_id(class="form-select" + (" is-invalid" if form.categoria_id.errors else "")) }}
-        {% if form.categoria_id.errors %}
+        {{ form.idcategoria.label(class="form-label fw-bold") }}
+        {{ form.idcategoria(class="form-select" + (" is-invalid" if form.idcategoria.errors else ""), required=True) }}
+        {% if form.idcategoria.errors %}
           <div class="invalid-feedback">
-            {% for error in form.categoria_id.errors %}{{ error }}{% endfor %}
+            {% for error in form.idcategoria.errors %}{{ error }}{% endfor %}
           </div>
         {% endif %}
       </div>
@@ -45,24 +55,26 @@
       {% endif %}
     </div>
 
-    <!-- Cantidad y Precio -->
+    <!-- Stock y Precio en fila -->
     <div class="row g-3 mb-3">
+      <!-- Stock -->
       <div class="col-md-6">
-        {{ form.cantidad.label(class="form-label fw-bold") }}
-        {{ form.cantidad(class="form-control" + (" is-invalid" if form.cantidad.errors else "")) }}
-        {% if form.cantidad.errors %}
+        {{ form.stock.label(class="form-label fw-bold") }}
+        {{ form.stock(class="form-control" + (" is-invalid" if form.stock.errors else "")) }}
+        {% if form.stock.errors %}
           <div class="invalid-feedback">
-            {% for error in form.cantidad.errors %}{{ error }}{% endfor %}
+            {% for error in form.stock.errors %}{{ error }}{% endfor %}
           </div>
         {% endif %}
       </div>
 
+      <!-- Precio de venta -->
       <div class="col-md-6">
-        {{ form.precio_unitario.label(class="form-label fw-bold") }}
-        {{ form.precio_unitario(class="form-control" + (" is-invalid" if form.precio_unitario.errors else ""), placeholder="0.00") }}
-        {% if form.precio_unitario.errors %}
+        {{ form.precio_venta.label(class="form-label fw-bold") }}
+        {{ form.precio_venta(class="form-control" + (" is-invalid" if form.precio_venta.errors else ""), placeholder="0.00") }}
+        {% if form.precio_venta.errors %}
           <div class="invalid-feedback">
-            {% for error in form.precio_unitario.errors %}{{ error }}{% endfor %}
+            {% for error in form.precio_venta.errors %}{{ error }}{% endfor %}
           </div>
         {% endif %}
       </div>
@@ -79,5 +91,4 @@
     </div>
   </form>
 </div>
-
 {% endblock %}

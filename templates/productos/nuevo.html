@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Formulario de Producto{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Ingresar Producto</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <!-- Grid de dos columnas -->
+    <!-- Código -->
+    <div class="col-md-6">
+      {{ form.codigo.label(class="form-label fw-bold") }}
+      {{ form.codigo(class="form-control" + (" is-invalid" if form.codigo.errors else "")) }}
+      {% if form.codigo.errors %}
+    <div class="invalid-feedback">
+      {% for error in form.codigo.errors %}{{ error }}{% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+    <div class="row g-3 mb-3">
+      <!-- Nombre -->
+      <div class="col-md-6">
+        {{ form.nombre.label(class="form-label fw-bold") }}
+          {{ form.nombre(class="form-control" + (" is-invalid" if form.nombre.errors else ""), required=True) }}
+          {% if form.nombre.errors %}
+          <div class="invalid-feedback">
+            {% for error in form.nombre.errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+    </div>
+
+      <!-- Categoría -->
+      <div class="col-md-6">
+        {{ form.idcategoria.label(class="form-label fw-bold") }}
+        {{ form.idcategoria(class="form-select" + (" is-invalid" if form.idcategoria.errors else ""), required=True) }}
+        {% if form.idcategoria.errors %}
+          <div class="invalid-feedback">
+            {% for error in form.idcategoria.errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Descripción (ancho completo) -->
+    <div class="mb-3">
+      {{ form.descripcion.label(class="form-label fw-bold") }}
+      {{ form.descripcion(class="form-control" + (" is-invalid" if form.descripcion.errors else ""), rows="3") }}
+      {% if form.descripcion.errors %}
+        <div class="invalid-feedback d-block">
+          {% for error in form.descripcion.errors %}{{ error }}{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Stock y Precio en fila -->
+    <div class="row g-3 mb-3">
+      <!-- Stock -->
+      <div class="col-md-6">
+        {{ form.stock.label(class="form-label fw-bold") }}
+        {{ form.stock(class="form-control" + (" is-invalid" if form.stock.errors else "")) }}
+        {% if form.stock.errors %}
+          <div class="invalid-feedback">
+            {% for error in form.stock.errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Precio de venta -->
+      <div class="col-md-6">
+        {{ form.precio_venta.label(class="form-label fw-bold") }}
+        {{ form.precio_venta(class="form-control" + (" is-invalid" if form.precio_venta.errors else ""), placeholder="0.00") }}
+        {% if form.precio_venta.errors %}
+          <div class="invalid-feedback">
+            {% for error in form.precio_venta.errors %}{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-dark">
+        <i class="bi bi-save me-1"></i> Guardar
+      </button>
+      <a href="{{ url_for('productos_list') }}" class="btn btn-secondary">
+        <i class="bi bi-x-circle me-1"></i> Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

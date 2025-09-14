@@ -1,136 +1,97 @@
-# app.py
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, DecimalField, SelectField, SubmitField
-from wtforms.validators import DataRequired, NumberRange
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import event
-from dataclasses import dataclass
-from models import db, Producto  # Ajusta según tu estructura
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from conexion.conexion import conexion, cerrar_conexion
 from werkzeug.security import generate_password_hash, check_password_hash
-from wtforms import PasswordField, BooleanField
-from wtforms.validators import Email
+from forms import ProductoForm, UsuarioForm, LoginForm
+from datetime import datetime
+import mysql.connector  # ← Importa esto para usar Error
+from flask import jsonify
 
-
-# === 1. Crear db SIN app ===
-db = SQLAlchemy()
-
-# === 2. Crear la app ===
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-change-this-in-production"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///inventario.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SECRET_KEY'] = 'dev-secret-key'
 
-# === 3. Registrar db con la app ===
-db.init_app(app)
+# Inyectar "now" para usar {{ now().year }} en templates
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow}
 
-# === 4. Activar claves foráneas en SQLite (dentro del contexto) ===
-with app.app_context():
-    @event.listens_for(db.engine, "connect")
-    def set_sqlite_pragma(dbapi_connection, connection_record):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
-
-# ---------------------------------------------
-# Modelos
-# ---------------------------------------------
-class Categoria(db.Model):
-    __tablename__ = "categoria"
-    id = db.Column("idCategoria", db.Integer, primary_key=True, autoincrement=True)
-    nombre = db.Column(db.String(100), unique=True, nullable=False)
-    descripcion = db.Column(db.Text, nullable=False)
-
-class Producto(db.Model):
-    __tablename__ = "producto"
-    id = db.Column("idProducto", db.Integer, primary_key=True, autoincrement=True)
-    categoria_id = db.Column(db.Integer, db.ForeignKey("categoria.idCategoria"), nullable=False)
-    nombre = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.Text, nullable=False, default="")
-    precio_unitario = db.Column("precioUnitario", db.Numeric(10, 2), nullable=False)
-    cantidad = db.Column(db.Integer, nullable=False, default=0)
-
-    categoria = db.relationship("Categoria", backref="productos")
-
-class Usuario(db.Model):
-    __tablename__ = "usuario"
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-# ---------------------------------------------
-# Caché en memoria
-# ---------------------------------------------
-@dataclass
-class ProductoDTO:
-    id: int
-    nombre: str
-    cantidad: int
-    precio_unitario: float
-
-class InventarioCache:
-    def __init__(self):
-        self._by_id: dict[int, ProductoDTO] = {}
-        self._by_name_index: dict[str, set[int]] = {}
-
-    def cargar(self, productos: list[Producto]):
-        self._by_id.clear()
-        self._by_name_index.clear()
-        for p in productos:
-            dto = ProductoDTO(p.id, p.nombre, int(p.cantidad), float(p.precio_unitario))
-            self._by_id[p.id] = dto
-            key = p.nombre.lower()
-            self._by_name_index.setdefault(key, set()).add(p.id)
-
-    def buscar_por_nombre(self, nombre: str) -> list[ProductoDTO]:
-        clave = nombre.lower()
-        resultados = []
-        for k, ids in self._by_name_index.items():
-            if clave in k:
-                for pid in ids:
-                    resultados.append(self._by_id[pid])
-        return resultados
-
-inventario_cache = InventarioCache()
-
-# ---------------------------------------------
-# Formularios
-# ---------------------------------------------
-class ProductoForm(FlaskForm):
-    nombre = StringField("Nombre", validators=[DataRequired()])
-    descripcion = StringField("Descripción", validators=[DataRequired()])
-    cantidad = IntegerField("Cantidad", validators=[DataRequired(), NumberRange(min=0)])
-    precio_unitario = DecimalField(
-        "Precio Unitario", 
-        places=2, 
-        rounding=None, 
-        validators=[DataRequired(), NumberRange(min=0)]
-    )
-    categoria_id = SelectField("Categoría", coerce=int, validators=[DataRequired()])
-    submit = SubmitField("Guardar")
-
-class LoginForm(FlaskForm):
-    email = StringField("Correo electrónico", validators=[DataRequired(), Email()])
-    password = PasswordField("Contraseña", validators=[DataRequired()])
-    remember = BooleanField("Recordarme")
-    submit = SubmitField("Iniciar sesión")
-
-# ---------------------------------------------
-# Rutas
-# ---------------------------------------------
+# --- Rutas existentes ---
 @app.route('/')
 def index():
     return render_template('index.html', title='Inicio')
 
-@app.route('/usuario/<nombre>')
-def usuario(nombre):
-    return f'Bienvenido, {nombre}!'
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        conn = conexion()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuario WHERE email = %s", (form.email.data,))
+        usuario = cursor.fetchone()
+        cerrar_conexion(conn)
+
+        if usuario and check_password_hash(usuario['password_hash'], form.password.data):
+            session['usuario_id'] = usuario['idusuario']
+            session['usuario_email'] = usuario['email']
+            flash("Inicio de sesión exitoso", "success")
+            return redirect(url_for("productos_list"))
+        else:
+            flash("Correo o contraseña incorrectos", "danger")
+
+    return render_template("usuarios/login.html", form=form)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Has cerrado sesión correctamente.", "info")
+    return redirect(url_for('login'))
+
+@app.route('/usuarios/crear_usuario', methods=['GET', 'POST'])
+def crear_usuario():
+    form = UsuarioForm()
+
+    # Cargar dinámicamente los roles y tipos de documento desde la BD
+    conn = conexion()
+    cur = conn.cursor(dictionary=True)
+    
+    cur.execute("SELECT idrol, nombre FROM rol WHERE estado = 1")
+    roles = cur.fetchall()
+    form.idrol.choices = [(r['idrol'], r['nombre']) for r in roles]
+
+    cur.execute("SELECT idtipodoc, nombre FROM tipo_documento")
+    tipodocs = cur.fetchall()
+    form.idtipodoc.choices = [(t['idtipodoc'], t['nombre']) for t in tipodocs]
+
+    if form.validate_on_submit():
+        try:
+            cur.execute("""
+                INSERT INTO usuario (
+                    nombres, apellidos, idtipodoc, num_documento, telefono, email,
+                    direccion, password_hash, idrol
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                form.nombres.data,
+                form.apellidos.data,
+                form.idtipodoc.data,
+                form.num_documento.data,
+                form.telefono.data,
+                form.email.data,
+                form.direccion.data,
+                generate_password_hash(form.password.data),
+                form.idrol.data
+            ))
+            conn.commit()
+            flash("Usuario registrado exitosamente.", "success")
+            return redirect(url_for("index"))
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error al registrar: {e}", "danger")
+        finally:
+            cerrar_conexion(conn)  # ← Solo una vez aquí
+    else:
+        cerrar_conexion(conn)  # ← Cierra conexión si no se valida
+
+    return render_template('usuarios/crear_usuario.html', title="Nuevo Usuario", form=form)
 
 @app.route('/about/')
 def about():
@@ -140,106 +101,291 @@ def about():
 def contact():
     return render_template('contact.html', title='Contactos')
 
+# ---- Productos ----
+# Listar / Buscar
 @app.route('/productos')
 def productos_list():
-    # Obtener el término de búsqueda
     q = request.args.get('q', '').strip()
-
-    # Construir consulta
-    query = Producto.query
-
+    conn = conexion()
+    cur = conn.cursor(dictionary=True)
+    
     if q:
-        query = query.filter(Producto.nombre.ilike(f'%{q}%'))
+        cur.execute("""
+            SELECT 
+                p.idproducto, p.codigo, p.nombre, p.descripcion, 
+                c.nombre AS categoria, p.stock, p.precio_venta 
+            FROM producto p
+            LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+            WHERE p.nombre LIKE %s
+        """, (f"%{q}%",))
+    else:
+        cur.execute("""
+            SELECT 
+                p.idproducto, p.codigo, p.nombre, p.descripcion, 
+                c.nombre AS categoria, p.stock, p.precio_venta 
+            FROM producto p
+            LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+        """)
+    
+    productos = cur.fetchall()
+    cerrar_conexion(conn)
+    return render_template('productos/productos_list.html', title='Productos', productos=productos, q=q)
 
-    productos = query.all()  # Puedes usar .paginate() si deseas paginación
+# Crear producto
+@app.route('/productos/nuevo', methods=['GET', 'POST'])
+def crear_producto():
+    if 'usuario_id' not in session:
+        flash("Debes iniciar sesión para acceder a esta página.", "warning")
+        return redirect(url_for('login'))
 
-    return render_template('productos_list.html', productos=productos)
-
-@app.route("/productos/nuevo", methods=["GET", "POST"])
-def productos_new_wtf():
     form = ProductoForm()
-    form.categoria_id.choices = [(c.id, c.nombre) for c in Categoria.query.order_by(Categoria.nombre).all()]
-    
+
+    # Cargar categorías
+    conn = conexion()
+    try:
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT idcategoria, nombre FROM categoria WHERE estado = 1 ORDER BY nombre")
+        categorias = cur.fetchall()
+        
+        # ✅ Las opciones son tuplas (str, str) — pero idcategoria es INT en DB
+        # Convertimos idcategoria a string para que funcione con coerce=str
+        form.idcategoria.choices = [('', 'Selecciona una categoría')] + \
+            [(str(cat['idcategoria']), cat['nombre']) for cat in categorias]  # ← ¡IMPORTANTE! str(idcategoria)
+
+    except Exception as e:
+        flash(f"Error al cargar categorías: {str(e)}", "danger")
+    finally:
+        cerrar_conexion(conn)
+
     if form.validate_on_submit():
-        p = Producto(
-            nombre=form.nombre.data.strip(),
-            descripcion=form.descripcion.data,
-            cantidad=form.cantidad.data,
-            precio_unitario=form.precio_unitario.data,
-            categoria_id=form.categoria_id.data
-        )
-        db.session.add(p)
-        db.session.commit()
-        flash("Producto creado correctamente.", "success")
-        return redirect(url_for("productos_list"))
-    
-    return render_template("formulario.html", form=form, titulo="Nuevo producto")
+        # ✅ VALIDACIÓN MANUAL: ¿se eligió categoría?
+        if not form.idcategoria.data or form.idcategoria.data == '':
+            flash("Por favor, selecciona una categoría.", "danger")
+            return render_template('productos/formulario.html', title='Nuevo producto', form=form, modo='crear')
+
+        # ✅ CONVERSIÓN MANUAL A ENTERO — ¡AHORA ES SEGURA!
+        try:
+            idcategoria_int = int(form.idcategoria.data)  # ← Aquí sí es seguro
+        except (ValueError, TypeError):
+            flash("Categoría inválida.", "danger")
+            return render_template('productos/nuevo.html', title='Nuevo producto', form=form, modo='crear')
+
+        # ✅ ¡Ahora puedes usar idcategoria_int como entero!
+        conn = conexion()
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO producto 
+                (codigo, nombre, descripcion, idcategoria, stock, precio_venta) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                form.codigo.data,
+                form.nombre.data,
+                form.descripcion.data,
+                idcategoria_int,   # ✅ Entero seguro
+                form.stock.data,
+                float(form.precio_venta.data)
+            ))
+            conn.commit()
+            flash('Producto agregado correctamente.', 'success')
+            return redirect(url_for('productos_list'))
+        except Exception as e:
+            conn.rollback()
+            if 'Duplicate entry' in str(e) and 'codigo' in str(e).lower():
+                form.codigo.errors.append(f'El código "{form.codigo.data}" ya existe. Por favor, use uno diferente.')
+            elif 'Duplicate entry' in str(e) and 'nombre' in str(e).lower():
+                form.nombre.errors.append(f'El nombre "{form.nombre.data}" ya existe. Por favor, use otro.')
+            else:
+                form.nombre.errors.append(f'No se pudo guardar: {str(e)}')
+        finally:
+            cerrar_conexion(conn)
+
+    return render_template('productos/nuevo.html', title='Nuevo producto', form=form, modo='crear')
 
 
+# Editar producto existente
+@app.route('/productos/<int:pid>/editar', methods=['GET', 'POST'])
+def editar_producto(pid):
+    conn = conexion()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM producto WHERE idproducto = %s", (pid,))
+    prod = cursor.fetchone()
+    if not prod:
+        cerrar_conexion(conn)
+        return "Producto no encontrado", 404
 
-@app.route("/productos/<int:pid>/editar", methods=["GET", "POST"])
-def productos_edit(pid):
-    p = Producto.query.get_or_404(pid)
-    form = ProductoForm(obj=p)
-    form.categoria_id.choices = [(c.id, c.nombre) for c in Categoria.query.order_by(Categoria.nombre).all()]
-    
+    form = ProductoForm(data={
+        'codigo': prod['codigo'],
+        'nombre': prod['nombre'],
+        'descripcion': prod['descripcion'],
+        'idcategoria': prod['idcategoria'],
+        'stock': prod['stock'],
+        'precio_venta': prod['precio_venta'],
+    })
+
+    # Cargar categorías para el select
+    try:
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT idcategoria, nombre FROM categoria WHERE estado = 1 ORDER BY nombre")
+        categorias = cur.fetchall()
+        form.idcategoria.choices = [('', 'Selecciona una categoría')] + \
+            [(cat['idcategoria'], cat['nombre']) for cat in categorias]
+    except Exception as e:
+        flash(f"Error al cargar categorías: {str(e)}", "danger")
+    finally:
+        cerrar_conexion(conn)
+
     if form.validate_on_submit():
-        form.populate_obj(p)
-        db.session.commit()
-        flash("Producto actualizado.", "success")
-        return redirect(url_for("productos_list"))
-    
-    return render_template("formulario.html", form=form, titulo=f"Editar producto #{p.id}")
+        conn = conexion()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE producto
+                SET codigo = %s, nombre = %s, descripcion = %s, idcategoria = %s, stock = %s, precio_venta = %s
+                WHERE idproducto = %s
+            """, (
+                form.codigo.data,
+                form.nombre.data,
+                form.descripcion.data,
+                form.idcategoria.data,
+                form.stock.data,
+                float(form.precio_venta.data),
+                pid
+            ))
+            conn.commit()
+            flash('Producto actualizado correctamente.', 'success')
+            return redirect(url_for('productos_list'))
+        except Exception as e:
+            conn.rollback()
+            form.nombre.errors.append(f'Error al actualizar el producto: {str(e)}')
+        finally:
+            cerrar_conexion(conn)
 
-@app.route("/productos/<int:pid>/eliminar")
-def productos_delete(pid):
-    p = Producto.query.get_or_404(pid)
-    db.session.delete(p)
-    db.session.commit()
-    flash("Producto eliminado.", "success")
-    return redirect(url_for("productos_list"))
+    return render_template('productos/actualizar.html', title='Editar producto', form=form, modo='editar', pid=pid)
 
-# ---------------------------------------------
-# === Inicialización de la base de datos ===
-# ---------------------------------------------
-with app.app_context():
-    db.create_all()  # ✅ Crear tablas primero
-
-    # Insertar categorías iniciales si no existen
-    if Categoria.query.first() is None:
-        categorias = [
-            Categoria(nombre="Fútbol", descripcion="Uniformes y accesorios"),
-            Categoria(nombre="Básquet", descripcion="Uniformes y accesorios"),
-            Categoria(nombre="Voleibol", descripcion="Uniformes y accesorios"),
-        ]
-        db.session.add_all(categorias)
-        db.session.commit()
-        print("✅ Categorías iniciales creadas.")
+# Eliminar producto
+@app.route('/productos/<int:pid>/eliminar', methods=['POST'])
+def eliminar_producto(pid):
+    conn = conexion()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM producto WHERE idproducto = %s", (pid,))
+    if cursor.rowcount > 0:
+        conn.commit()
+        flash('Producto eliminado correctamente.', 'success')
     else:
-        print("ℹ️  Categorías ya existen.")
+        flash('Producto no encontrado.', 'warning')
+    cerrar_conexion(conn)
+    return redirect(url_for('productos_list'))
 
-# Crear usuario admin si no existe
-    if Usuario.query.filter_by(email="admin@admin.com").first() is None:
-        admin = Usuario(email="admin@admin.com")
-        admin.set_password("1234")  # Puedes cambiar la contraseña
-        db.session.add(admin)
-        db.session.commit()
-        print("✅ Usuario admin creado.")
-    else:
-        print("ℹ️ Usuario admin ya existe.")
+# --- API para Categorías ---
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        usuario = Usuario.query.filter_by(email=form.email.data).first()
-        if usuario and usuario.check_password(form.password.data):
-            flash("Inicio de sesión exitoso", "success")
-            return redirect(url_for("index"))
-        else:
-            flash("Correo o contraseña incorrectos", "danger")
-    return render_template('login.html', form=form)
+# Crear categoría (POST)
+@app.route('/categoria', methods=['POST'])
+def crear_categoria():
+    try:
+        data = request.get_json(silent=True)  # ← silent=True evita crash si no es JSON
+        if not data:
+            return jsonify({'error': 'Datos en formato JSON requeridos'}), 400
 
-# Iniciar app
+        nombre = data.get('nombre')
+        descripcion = data.get('descripcion')
+        usuario_modifico = data.get('usuario_modifico')
+
+        if not nombre or usuario_modifico is None:
+            return jsonify({'error': 'Faltan campos requeridos: nombre o usuario_modifico'}), 400
+
+        conn = conexion()
+        cursor = conn.cursor()
+
+        sql = """
+        INSERT INTO categoria (nombre, descripcion, usuario_modifico)
+        VALUES (%s, %s, %s)
+        """
+        valores = (nombre, descripcion, usuario_modifico)
+
+        cursor.execute(sql, valores)
+        conn.commit()
+
+        return jsonify({'mensaje': 'Categoría creada correctamente'}), 201
+
+    except mysql.connector.IntegrityError as e:
+        if "Duplicate entry" in str(e):
+            return jsonify({'error': 'Ya existe una categoría con ese nombre'}), 409
+        return jsonify({'error': 'Error de integridad: ' + str(e)}), 400
+
+    except Exception as e:
+        return jsonify({'error': 'Error al conectar o insertar en la base de datos: ' + str(e)}), 500
+
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals() and conn.is_connected():
+            conn.close()
+
+# Actualizar categoría (PUT)
+@app.route('/categoria/<int:idcategoria>', methods=['PUT'])
+def actualizar_categoria(idcategoria):
+    try:
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'error': 'Datos en formato JSON requeridos'}), 400
+
+        nombre = data.get('nombre')
+        descripcion = data.get('descripcion')
+        estado = data.get('estado')
+        usuario_modifico = data.get('usuario_modifico')
+
+        if usuario_modifico is None:
+            return jsonify({'error': 'El campo usuario_modifico es requerido'}), 400
+
+        conn = conexion()
+        cursor = conn.cursor(dictionary=True)
+
+        # Verificar que la categoría existe
+        cursor.execute("SELECT * FROM categoria WHERE idcategoria = %s", (idcategoria,))
+        categoria = cursor.fetchone()
+        if not categoria:
+            return jsonify({'error': 'Categoría no encontrada'}), 404
+
+        # Construir actualización dinámica
+        campos = []
+        valores = []
+
+        if nombre is not None:
+            campos.append("nombre = %s")
+            valores.append(nombre)
+        if descripcion is not None:
+            campos.append("descripcion = %s")
+            valores.append(descripcion)
+        if estado is not None:
+            if estado not in [0, 1, True, False]:
+                return jsonify({'error': 'El estado debe ser 0 o 1'}), 400
+            campos.append("estado = %s")
+            valores.append(int(estado))
+
+        campos.append("usuario_modifico = %s")
+        valores.append(usuario_modifico)
+        valores.append(idcategoria)  # Para el WHERE
+
+        sql = f"UPDATE categoria SET {', '.join(campos)} WHERE idcategoria = %s"
+        cursor.execute(sql, tuple(valores))
+        conn.commit()
+
+        return jsonify({'mensaje': 'Categoría actualizada correctamente'}), 200
+
+    except mysql.connector.IntegrityError as e:
+        if "Duplicate entry" in str(e):
+            return jsonify({'error': 'Ya existe una categoría con ese nombre'}), 409
+        return jsonify({'error': 'Error de integridad: ' + str(e)}), 400
+
+    except Exception as e:
+        return jsonify({'error': 'Error al actualizar la categoría: ' + str(e)}), 500
+
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals() and conn.is_connected():
+            conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)

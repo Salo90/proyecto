@@ -46,14 +46,27 @@
           <a class="nav-link active" href="{{ url_for('productos_list') }}">Productos</a>
         </li>
       </ul>
+      {% if session['usuario_email'] %}
+  <span class="text-white me-2 small">
+    {{ session['usuario_email'] }}
+  </span>
+{% endif %}
 
-      <!-- Botón de login -->
-      <div class="d-flex align-items-center ms-lg-3 mt-2 mt-lg-0">
-        <a class="btn btn-outline-light" href="{{ url_for('login') }}" title="Iniciar sesión">
-          <i class="bi bi-person-circle"></i>
-          <span class="d-none d-sm-inline ms-1">Iniciar sesión</span>
-        </a>
-      </div>
+      <!-- Botón login / logout -->
+<div class="d-flex align-items-center ms-lg-3 mt-2 mt-lg-0">
+  {% if session['usuario_id'] %}
+    <a class="btn btn-outline-warning" href="{{ url_for('logout') }}" title="Cerrar sesión">
+      <i class="bi bi-box-arrow-right"></i>
+      <span class="d-none d-sm-inline ms-1">Cerrar sesión</span>
+    </a>
+  {% else %}
+    <a class="btn btn-outline-light" href="{{ url_for('login') }}" title="Iniciar sesión">
+      <i class="bi bi-person-circle"></i>
+      <span class="d-none d-sm-inline ms-1">Iniciar sesión</span>
+    </a>
+  {% endif %}
+</div>
+
     </div>
   </div>
 </nav>
