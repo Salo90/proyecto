@@ -10,6 +10,18 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial
 .site-footer { border-top: 1px solid #e7eaf0; padding: 1rem; text-align: center; color: #666; }
 */
 
+.panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+ .col-md-9 p {
+  text-align: left;
+}
 .logo-custom {
       height: 40px;
       width: auto;
@@ -46,7 +58,7 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial
       border-color: #f5c2c7;
     }
 /* Contenido principal */
-main.container {
+main.container-fluid py-4 {
     margin-top: 2rem;
     margin-bottom: 2rem;
 }
@@ -90,18 +102,21 @@ main.container-fluid {
   margin: 0;       /* sin márgenes */
   padding: 0;      /* sin padding */
 }
-
-.historia-texto p {
-  text-align: justify;
+ /* ::::::::::::::..: */
+/* Estilos para la sección "Quiénes Somos" */
+.logo-salo {
+    max-width: 400px;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-  /* Estilos solo para la sección "Quiénes Somos" */
-  .historia-texto {
-    color: #6c757d; /* plomo/gris oscuro */
-    text-align: justify; /* opcional: texto justificado */
-  }
-
-  .col-md-6 h2 {
+.historia-texto {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #333;
+}
+.col-md-6 h2 {
     color: #000; /* negro */
     font-weight: bold;
   }
@@ -110,11 +125,15 @@ main.container-fluid {
     color: #000; /* negro */
   }
 
-.logo-salo {
-  max-width: 200px; /* ancho máximo de la imagen */
-  height: auto;     /* mantiene la proporción */
-  border-radius: 10px; /* opcional: bordes redondeados */
+/* Responsive */
+@media (max-width: 768px) {
+    .logo-salo {
+        max-width: 100%;
+        margin-bottom: 2rem;
+    }
 }
+
+  /* ::::::::::::::..: */
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -125,6 +144,91 @@ main.container-fluid {
     .carousel-item img {
         max-height: 300px;
     }
+}
+
+
+
+
+/* static/css/style.css */
+.sidebar {
+    min-height: 100vh;
+}
+
+.card {
+    height: 100%;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.bg-primary { background-color: #007bff; }
+.bg-danger { background-color: #dc3545; }
+.bg-success { background-color: #28a745; }
+.bg-purple { background-color: #6f42c1; }
+.bg-teal { background-color: #20c997; }
+.bg-lightgreen { background-color: #28a745; }
+.bg-orange { background-color: #fd7e14; }
+.bg-gray { background-color: #6c757d; }
+.bg-red { background-color: #dc3545; }
+.bg-cyan { background-color: #17a2b8; }
+.bg-pink { background-color: #e83c84; }
+
+.card-body {
+    padding: 1rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.card-text {
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.badge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+    .main {
+        margin-left: 0;
+    }
+}
+
+
+/* Carrusel full screen */
+.carousel-item {
+    height: 100vh;
+    min-height: 300px;
+}
+
+.carousel-caption {
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 10%;
+}
+
+.carousel-indicators [data-bs-target] {
+    width: 30px;
+    height: 3px;
+    border-radius: 0;
+    background-color: #fff;
+}
+
+.carousel-indicators .active {
+    background-color: #e60000;
 }
 
 

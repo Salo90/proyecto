@@ -1,15 +1,37 @@
-{% extends "base.html" %}
-{% block title %}Login{% endblock %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - GesNet</title>
+    <!-- Bootstrap 5.3.7 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <!-- Top Links -->
+    <div class="top-links">
+        <a href="{{ url_for('index') }}">Inicio</a>
+        <a href="#">Preguntas Frecuentes</a>
+        <div class="social-icons">
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+        </div>
+    </div>
 
-{% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h3 class="text-center mb-4">Iniciar Sesión</h3>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="login-container">
+            <!-- Logo -->
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='img/logo2.jpeg') }}" class="logo" alt=" GesNet" width="80" height="50">
+            </div>
 
-          <form method="POST" action="{{ url_for('login') }}">
+            <!-- Formulario -->
+            <div class="form-section">
+                <form method="POST" action="{{ url_for('login') }}">
             {{ form.hidden_tag() }}
 
             <div class="mb-3">
@@ -32,13 +54,26 @@
               {{ form.submit(class="btn btn-primary") }}
             </div>
           </form>
-          <div class="text-center mt-3">
-  <p>¿No tienes una cuenta? <a href="{{ url_for('crear_usuario') }}">Regístrate aquí</a></p>
-</div>
 
+            </div>
+
+            <!-- Banner -->
+            <div class="banner-section">
+                <img src="https://www.baulphp.com/wp-content/uploads/edd/2021/11/sistema-gesnet.png.webp" alt="GesNet">
+                <h1>¡Fácil, seguro y sin costo!</h1>
+                <p>Administra tu negocio desde cualquier lugar</p>
+                <div class="mt-3">
+                    <small>User: admin</small><br>
+                    <small>Password: 123456</small>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-</div>
-  {% endblock %}
+
+    <!-- Footer -->
+    <div class="footer">
+        www.gesnet.com.pe
+    </div>
+
+</body>
+</html>

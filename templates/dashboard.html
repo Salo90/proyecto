@@ -1,0 +1,178 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>GesNet Dashboard</title>
+    <!-- Bootstrap 5.3.7 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="sidebar-xs has-detached-right">
+
+    <!-- Main Navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('panel') }}">
+                <img src="{{ url_for('static', filename='img/logoEmpresa.png') }}" alt="GesNet" width="30" height="30">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            
+                    <!-- Botón login / logout -->
+                    <div class="d-flex align-items-center ms-lg-3 mt-2 mt-lg-0">
+                        {% if session['usuario_email'] %}
+                        <span class="text-white me-2 small">
+                            {{ session['usuario_email'] }}
+                        </span>
+                    {% endif %}
+                    {% if session['usuario_id'] %}
+                    <a class="btn btn-outline-warning" href="{{ url_for('logout') }}" title="Cerrar sesión">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-none d-sm-inline ms-1"></span>
+                    </a>
+                    {% else %}
+                        <a class="btn btn-outline-light" href="{{ url_for('login') }}" title="Iniciar sesión">
+                            <i class="bi bi-person-circle"></i>
+                            <span class="d-none d-sm-inline ms-1">Iniciar sesión</span>
+                        </a>
+                    {% endif %}
+                </div>
+            
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 col-lg-2 d-none d-md-block bg-dark sidebar" style="height: calc(100vh - 56px); position: fixed; top: 56px;">
+                <div class="sidebar-sticky pt-3">
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white">
+                        <span>admin</span>
+                        <small>EMPLEADO</small>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active text-white" href="{{ url_for('panel') }}">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white d-flex align-items-center" 
+                            href="#" 
+                            id="menuAlmacen" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                                <i class="fas fa-warehouse me-2"></i> Almacén
+                            </a>
+                            <ul class="dropdown-menu bg-dark" aria-labelledby="menuAlmacen">
+                                
+                                <li><a class="dropdown-item text-white" href="{{ url_for('listaProducto') }}">Productos</a></li>
+                                
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-file-invoice-dollar"></i> Cotizaciones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-truck"></i> Compras
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-cash-register"></i> Caja
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-shopping-cart"></i> Ventas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-tag"></i> Apartados
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-hand-holding-usd"></i> Ventas al Crédito
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-box-open"></i> Inventario
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-wrench"></i> Taller
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-file-invoice"></i> Comprobantes
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white d-flex align-items-center" 
+                            href="#" 
+                            id="menuUsuarios" 
+                            role="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                                <i class="fas fa-users me-2"></i> Usuarios
+                            </a>
+                            <ul class="dropdown-menu bg-dark" aria-labelledby="menuUsuarios">
+                                <li><a class="dropdown-item text-white" href="{{ url_for('listaEmpleados') }}"><i class="fas fa-user-tie me-2"></i> Empleados</a></li>
+                                <li><a class="dropdown-item text-white" href="{{ url_for('listaUsuario') }}"><i class="fas fa-user-shield me-2"></i> Usuario</a></li>
+                                <li><hr class="dropdown-divider bg-secondary"></li>
+                                <li><a class="dropdown-item text-white" href="{{ url_for('listaRoles') }}"><i class="fas fa-key me-2"></i> Roles y Permisos</a></li>
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-cog"></i> Parámetros
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#">
+                                <i class="fas fa-info-circle"></i> Acerca de
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            
+            <!-- Main Content -->
+            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4" style="margin-top: 56px;">
+                <div class="row" style=" padding: 10px 0 10px 0; border-color: #ddd;" >
+                    <div class="col-12">
+                        <!-- Contenedor principal con borde -->
+                        <div class="card border-0 shadow-sm" style="border: 1px solid rgba(0, 42, 140, 0.1); border-radius: 12px; overflow: hidden;">
+                
+                            {% block content %}{% endblock %}
+                        </div>
+                  </div>
+                </div>
+            </main>
+        </div>
+    </div>
+   
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

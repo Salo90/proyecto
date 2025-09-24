@@ -1,33 +1,45 @@
-{% extends "base.html" %}
+{% extends "base1.html" %}
 {% block title %}Acerca de{% endblock %}
 
 {% block content %}
-<div class="container my">
-  <div class="row g-4 align-items-center">
-    <!-- Columna izquierda con imagen -->
-    <div class="col-md-6 text-center">
-      <img src="{{ url_for('static', filename='img/logo2.jpeg') }}" 
-           alt="Salo Sport" 
-           class="logo-salo">
-    </div>
+<!-- Sección "Quiénes Somos" -->
+<div class="container my-5">
+    <div class="row g-4 align-items-center">
+        <!-- Columna izquierda con imagen -->
+        <div class="col-md-3 text-center">
+            <div class="p-4">
+                <img src="{{ url_for('static', filename='img/logo2.jpeg') }}" 
+                     alt="Salo Sport" 
+                     class="img-fluid rounded shadow" width="500">
+            </div>
+        </div>
 
-    <!-- Columna derecha -->
-    <div class="col-md-6 text-white p-5 ">
-      <h2 class="text mb-3">Quiénes Somos</h2>
-      <h4 class="mb-4">Nuestra Historia</h4>
-      <p class="historia-texto">
-        Salo Sport nació en la ciudad de Tena hace más de 15 años, con la pasión de confeccionar uniformes deportivos y prendas personalizadas que transmitan identidad, unión y estilo en cada equipo.
-      
-        Lo que empezó como un pequeño emprendimiento familiar, con esfuerzo y dedicación se ha convertido en una marca reconocida en la región, ofreciendo uniformes deportivos, escolares, institucionales y para clubes con un sello único de calidad y compromiso.
-      
-        A lo largo de los años, hemos incorporado las últimas tecnologías en sublimación, bordado y confección, lo que nos ha permitido ofrecer productos resistentes, cómodos y totalmente personalizados, que reflejan la esencia de quienes los visten.
-      
-        En Salo Sport creemos que cada cliente es parte de nuestra historia, por eso trabajamos de la mano con ellos para transformar sus ideas en diseños que inspiran y motivan.
-      
-        Hoy seguimos creciendo, innovando y marcando diferencia, pero siempre con la misma misión: vestir a campeones dentro y fuera de la cancha.
-      </p>
+        <!-- Columna derecha con texto -->
+        <div class="col-md-9">
+            <div class="p-4 ">
+                <h2 class="text-dark fw-bold mb-3">
+                    <i class="fas fa-users me-2"></i>Quiénes Somos
+                </h2>
+                <h4 class="text-dark mb-4">
+                    <i class="fas fa-history me-2"></i>Nuestra Historia
+                </h4>
+                <p class="text-dark text-start lead">
+                    Salo Sport nació en la ciudad de Tena hace más de 15 años, con la pasión de confeccionar uniformes deportivos y prendas personalizadas que transmitan identidad, unión y estilo en cada equipo.
+                </p>
+                <p class="text-dark text-start">
+                    Lo que empezó como un pequeño emprendimiento familiar, con esfuerzo y dedicación se ha convertido en una marca reconocida en la región, ofreciendo uniformes deportivos, escolares, institucionales y para clubes con un sello único de calidad y compromiso.
+                    A lo largo de los años, hemos incorporado las últimas tecnologías en sublimación, bordado y confección, lo que nos ha permitido ofrecer productos resistentes, cómodos y totalmente personalizados, que reflejan la esencia de quienes los visten.
+                </p>
+                <p class="text-dark text-start">
+                    En Salo Sport creemos que cada cliente es parte de nuestra historia, por eso trabajamos de la mano con ellos para transformar sus ideas en diseños que inspiran y motivan.
+                </p>
+                <p class="text-dark text-start fw-bold">
+                    Hoy seguimos creciendo, innovando y marcando diferencia, pero siempre con la misma misión: vestir a campeones dentro y fuera de la cancha.
+                </p>
+                
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <ul class="list-inline text-center">

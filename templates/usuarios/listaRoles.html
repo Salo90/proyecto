@@ -1,0 +1,137 @@
+{% extends "dashboard.html" %}
+
+{% block title %}{{ title }} - GesNet{% endblock %}
+
+{% block content %}
+
+<main class="col-md-10 ms-sm-auto col-lg-10 px-md-4" style="margin-top: 56px;">
+    <div class="row" style="padding: 10px 0 10px 0; border-color: #ddd;">
+        <div class="col-12">
+            <!-- Contenedor principal con borde -->
+            <div class="card border-0 shadow-sm" style="border: 1px solid rgba(0, 42, 140, 0.1); border-radius: 12px; overflow: hidden;">
+                
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-key me-2"></i>Roles y Permisos</h4>
+                    <a href="{{ url_for('crear_rol') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-plus me-1"></i> Nuevo Rol
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Barra de búsqueda -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" placeholder="Buscar por nombre..." id="searchInput">
+                                <button class="btn btn-outline-secondary" type="button" onclick="filterTable()">
+                                    <i class="fas fa-filter"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Roles -->
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col"><i class="fas fa-hashtag"></i> ID</th>
+                                    <th scope="col"><i class="fas fa-tag"></i> Nombre</th>
+                                    <th scope="col"><i class="fas fa-align-left"></i> Descripción</th>
+                                    <th scope="col"><i class="fas fa-toggle-on"></i> Estado</th>
+                                    <th scope="col" class="text-center"><i class="fas fa-cogs"></i> Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rolesTableBody">
+                                {% for r in roles %}
+                                <tr>
+                                    <td><strong>{{ r.idrol }}</strong></td>
+                                    <td>{{ r.nombre }}</td>
+                                    <td>{{ r.descripcion or 'Sin descripción' }}</td>
+                                    <td>
+                                        {% if r.estado == 1 %}
+                                            <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary"><i class="fas fa-times-circle me-1"></i> Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ url_for('editar_rol', id=r.idrol) }}" class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ url_for('eliminar_rol', id=r.idrol) }}" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este rol? \n\n¡Esta acción no se puede deshacer!')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="alert alert-info mb-0">
+                                            <i class="fas fa-info-circle me-2"></i> No hay roles registrados. 
+                                            <a href="{{ url_for('crear_rol') }}" class="alert-link">¡Crea el primero!</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación (simulada) -->
+                    <nav aria-label="Page navigation" class="mt-3">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                                    <i class="fas fa-chevron-left"></i> Anterior
+                                </a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">
+                                    Siguiente <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Función para filtrar la tabla por búsqueda
+    function filterTable() {
+        const input = document.getElementById("searchInput");
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById("rolesTableBody");
+        const rows = table.getElementsByTagName("tr");
+
+        for (let i = 0; i < rows.length; i++) {
+            let match = false;
+            const cells = rows[i].getElementsByTagName("td");
+            
+            for (let j = 0; j < cells.length - 1; j++) { // Excluimos la columna de acciones
+                const cell = cells[j];
+                if (cell) {
+                    const txtValue = cell.textContent || cell.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+            }
+            
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+
+    // Evento para filtrar cuando se escribe
+    document.getElementById("searchInput").addEventListener("keyup", filterTable);
+</script>
+
+{% endblock %}

@@ -1,51 +1,91 @@
-{% extends "base.html" %}
+{% extends "base1.html" %}
 {% block title %}Contactos{% endblock %}
 
 {% block content %}
 
 <div class="container mt-5">
-  <div class="card shadow p-4">
-    <h2 class="mb-4">Formulario de Contacto</h2>
-    <form class="needs-validation" novalidate action="/contact" method="post">
+    <div class="row g-4">
+        <!-- Columna izquierda: Mapa -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Nuestra Ubicación</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div style="width: 100%; height: 400px; background: #e9ecef; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                        <div class="text-center">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d296.50009711780797!2d-77.81176183220862!3d-0.9973230735476949!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d6a513670e7113%3A0x14091863c3c73e94!2sSalo%20Sport!5e0!3m2!1ses!2sec!4v1758255703679!5m2!1ses!2sec" 
+                            width="444" height="394" style="border:0;" allowfullscreen="" loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                    </div>
+                    <!-- 
+                    Para usar Google Maps, reemplaza el div de arriba por:
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d..." width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    -->
+                </div>
+                <div class="card-footer bg-light">
+                    <p class="mb-1"><strong>Dirección:</strong> Av. 15 de Noviembre y Tena, Tena, Ecuador</p>
+                    <p class="mb-0"><strong>Teléfono:</strong> +593 961754836</p>
+                </div>
+            </div>
+        </div>
 
-      <!-- Nombre -->
-      <div class="mb-3">
-        <label for="nombre" class="form-label">Nombres <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="nombre" name="nombre" required>
-        <div class="invalid-feedback">Este campo es obligatorio</div>
-      </div>
+        <!-- Columna derecha: Formulario -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>Formulario de Contacto</h4>
+                </div>
+                <div class="card-body">
+                    <form class="needs-validation" novalidate action="/contact" method="post">
+                        <div class="row g-3">
+                            <!-- Nombre -->
+                            <div class="col-12">
+                                <label for="nombre" class="form-label">Nombres <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                <div class="invalid-feedback">Este campo es obligatorio</div>
+                            </div>
 
-      <!-- Email -->
-      <div class="mb-3">
-        <label for="email" class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="email@ejemplo.com" required>
-        <div class="invalid-feedback">Ingrese un correo válido</div>
-      </div>
+                            <!-- Email -->
+                            <div class="col-12">
+                                <label for="email" class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="email@ejemplo.com" required>
+                                <div class="invalid-feedback">Ingrese un correo válido</div>
+                            </div>
 
-      <!-- Teléfono -->
-      <div class="mb-3">
-        <label for="telefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
-        <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+593 987654321" pattern="[+0-9\s]{7,15}" required>
-        <div class="invalid-feedback">Ingrese un número de teléfono válido</div>
-      </div>
+                            <!-- Teléfono -->
+                            <div class="col-12">
+                                <label for="telefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+593 987654321" pattern="[+0-9\s]{7,15}" required>
+                                <div class="invalid-feedback">Ingrese un número de teléfono válido</div>
+                            </div>
 
-      <!-- Asunto -->
-      <div class="mb-3">
-        <label for="asunto" class="form-label">Asunto <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="asunto" name="asunto" placeholder="Escriba el asunto de su mensaje" required>
-        <div class="invalid-feedback">Por favor, indique el asunto</div>
-      </div>
+                            <!-- Asunto -->
+                            <div class="col-12">
+                                <label for="asunto" class="form-label">Asunto <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="asunto" name="asunto" placeholder="Escriba el asunto de su mensaje" required>
+                                <div class="invalid-feedback">Por favor, indique el asunto</div>
+                            </div>
 
-      <!-- Mensaje -->
-      <div class="mb-3">
-        <label for="mensaje" class="form-label">Mensaje(Opcional) <span class="text-danger"></span></label>
-        <textarea class="form-control" id="mensaje" name="mensaje" rows="4"></textarea>
-      </div>
+                            <!-- Mensaje -->
+                            <div class="col-12">
+                                <label for="mensaje" class="form-label">Mensaje (Opcional)</label>
+                                <textarea class="form-control" id="mensaje" name="mensaje" rows="4" placeholder="Escriba aquí su mensaje..."></textarea>
+                            </div>
 
-      <!-- Botón -->
-      <button type="submit" class="btn btn-dark w-100">Enviar</button>
-    </form>
-  </div>
+                            <!-- Botón -->
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-dark w-100">
+                                    <i class="fas fa-paper-plane me-2"></i>Enviar Mensaje
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
