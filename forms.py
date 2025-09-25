@@ -43,3 +43,9 @@ class LoginForm(FlaskForm):
     email = StringField('Correo electrónico', validators=[DataRequired(), Email()])
     password = PasswordField('Contraseña', validators=[DataRequired()])
     submit = SubmitField('Iniciar sesión')
+    
+class RolForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[DataRequired()])
+    descripcion = StringField('Descripción')
+    estado = SelectField('Estado', choices=[('1','Activo'),('0','Inactivo')])
+    submit = SubmitField('Crear Rol')

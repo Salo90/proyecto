@@ -4,10 +4,18 @@
 
 {% block content %}
 
+<!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-3 border-bottom">
+                    <ol class="breadcrumb px-3 py-2 mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="#"><i class="fas fa-user-tie"></i> Usuarios</a></li>
+                        <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-list"></i> Lista usuarios</li>
+                    </ol>
+                </nav>
 
-                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 px-3 mb-3 border-bottom">
                     <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Usuarios del Sistema</h4>
-                    <a href="{{ url_for('crearUsuario') }}" class="btn btn-outline-light btn-sm">
+                    <a href="{{ url_for('crearUsuario') }}" class="btn btn-outline-dark btn-sm">
                         <i class="fas fa-plus me-1"></i> Nuevo Usuario
                     </a>
                 </div>
@@ -29,9 +37,9 @@
 
                         <!-- Tabla de Usuarios -->
                         <div class="table-responsive">
-                            <table class="table table-hover table-bordered align-middle">
+                            <table class="table table-hover table-bordered align-middle" id="usuariosTable">
                                 <!-- En la tabla -->
-                                <thead class="table-dark">
+                                <thead class="table-light">
                                     <tr>
                                         <th scope="col"><i class="fas fa-hashtag"></i> ID</th>
                                         <th scope="col"><i class="fas fa-user-tie"></i> Usuario</th>
@@ -64,17 +72,19 @@
                                             {% endif %}
                                         </td>
                                         <td class="text-center">
-                                            <a href="{{ url_for('editar_usuario', id=u.idusuario) }}" 
+                                            <a href="{{ url_for('actualizarUsuario', id=u.idusuario) }}" 
                                             class="btn btn-sm btn-outline-primary me-1" 
                                             title="Editar usuario">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            {% if session['usuario_rol'] == 'Administrador' %}
                                             <a href="{{ url_for('eliminar_usuario', id=u.idusuario) }}" 
                                             class="btn btn-sm btn-outline-danger" 
                                             title="Eliminar usuario"
                                             onclick="return confirm('¿Estás seguro de eliminar este usuario? \n\n¡Esta acción no se puede deshacer!')">
                                                 <i class="fas fa-trash"></i>
                                             </a>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -107,35 +117,31 @@
     </div>
 </main>
 
-<script>
-    // Función para filtrar la tabla por búsqueda
+    <script>
     function filterTable() {
         const input = document.getElementById("searchInput");
-        const filter = input.value.toUpperCase();
-        const table = document.getElementById("usuariosTableBody");
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById("usuariosTable");
         const rows = table.getElementsByTagName("tr");
 
-        for (let i = 0; i < rows.length; i++) {
+        for (let i = 1; i < rows.length; i++) { // empieza en 1 para saltar <thead>
+            let cells = rows[i].getElementsByTagName("td");
             let match = false;
-            const cells = rows[i].getElementsByTagName("td");
-            
-            for (let j = 0; j < cells.length - 1; j++) { // Excluimos la columna de acciones
-                const cell = cells[j];
-                if (cell) {
-                    const txtValue = cell.textContent || cell.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        match = true;
-                        break;
-                    }
+
+            for (let j = 0; j < cells.length; j++) {
+                let txtValue = cells[j].textContent || cells[j].innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
                 }
             }
-            
+
             rows[i].style.display = match ? "" : "none";
         }
     }
 
-    // Evento para filtrar cuando se escribe
+    // Permitir filtrar en tiempo real mientras escribe
     document.getElementById("searchInput").addEventListener("keyup", filterTable);
-</script>
+    </script>
 
 {% endblock %}

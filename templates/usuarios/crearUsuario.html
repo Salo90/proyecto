@@ -1,104 +1,120 @@
 {% extends "dashboard.html" %}
 
-{% block title %}Registro de Nuevo Usuario{% endblock %}
+{% block title %}Registro de Nuevo Usuario - Salo Sport{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Registrar Nuevo Usuario</h2>
-    <form method="POST" class="needs-validation" novalidate action="">
-        {{ form.hidden_tag() }}
-        <div class="row g-3">
-            <div class="col-md-6">
-                {{ form.nombres.label(class="form-label") }}
-                {{ form.nombres(class="form-control", placeholder="Ingrese sus nombres") }}
-                {% for error in form.nombres.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
+
+<div class="card shadow">
+    <div class="card-header bg-dark text-white">
+        <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i> Registrar Nuevo Usuario</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="row g-3">
+                <!-- Nombres -->
+                <div class="col-md-6">
+                    {{ form.nombres.label(class="form-label fw-bold") }}
+                    {{ form.nombres(class="form-control", placeholder="Ingrese sus nombres") }}
+                    {% for error in form.nombres.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Apellidos -->
+                <div class="col-md-6">
+                    {{ form.apellidos.label(class="form-label fw-bold") }}
+                    {{ form.apellidos(class="form-control", placeholder="Ingrese sus apellidos") }}
+                    {% for error in form.apellidos.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Tipo documento -->
+                <div class="col-md-3">
+                    {{ form.idtipodoc.label(class="form-label fw-bold") }}
+                    {{ form.idtipodoc(class="form-select") }}
+                    {% for error in form.idtipodoc.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Número documento -->
+                <div class="col-md-3">
+                    {{ form.num_documento.label(class="form-label fw-bold") }}
+                    {{ form.num_documento(class="form-control", placeholder="Número de documento") }}
+                    {% for error in form.num_documento.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Teléfono -->
+                <div class="col-md-6">
+                    {{ form.telefono.label(class="form-label fw-bold") }}
+                    {{ form.telefono(class="form-control", placeholder="Teléfono") }}
+                    {% for error in form.telefono.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6">
+                    {{ form.email.label(class="form-label fw-bold") }}
+                    {{ form.email(class="form-control", placeholder="Correo electrónico") }}
+                    {% for error in form.email.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Dirección -->
+                <div class="col-md-6">
+                    {{ form.direccion.label(class="form-label fw-bold") }}
+                    {{ form.direccion(class="form-control", placeholder="Dirección") }}
+                    {% for error in form.direccion.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Contraseña -->
+                <div class="col-md-3">
+                    {{ form.password.label(class="form-label fw-bold") }}
+                    {{ form.password(class="form-control", placeholder="Contraseña") }}
+                    {% for error in form.password.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Confirmar contraseña -->
+                <div class="col-md-3">
+                    {{ form.confirm_password.label(class="form-label fw-bold") }}
+                    {{ form.confirm_password(class="form-control", placeholder="Confirmar contraseña") }}
+                    {% for error in form.confirm_password.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Rol -->
+                <div class="col-md-3">
+                    {{ form.idrol.label(class="form-label fw-bold") }}
+                    {{ form.idrol(class="form-select") }}
+                    {% for error in form.idrol.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="col-md-6">
-                {{ form.apellidos.label(class="form-label") }}
-                {{ form.apellidos(class="form-control", placeholder="Ingrese sus apellidos") }}
-                {% for error in form.apellidos.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-3">
-                {{ form.idtipodoc.label(class="form-label") }}
-                {{ form.idtipodoc(class="form-select") }}
-                {% for error in form.idtipodoc.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-3">
-                {{ form.num_documento.label(class="form-label") }}
-                {{ form.num_documento(class="form-control", placeholder="Número de documento") }}
-                {% for error in form.num_documento.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-6">
-                {{ form.telefono.label(class="form-label") }}
-                {{ form.telefono(class="form-control", placeholder="Teléfono") }}
-                {% for error in form.telefono.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-6">
-                {{ form.email.label(class="form-label") }}
-                {{ form.email(class="form-control", placeholder="Correo electrónico") }}
-                {% for error in form.email.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-6">
-                {{ form.direccion.label(class="form-label") }}
-                {{ form.direccion(class="form-control", placeholder="Dirección") }}
-                {% for error in form.direccion.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-3">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-control", placeholder="Contraseña") }}
-                {% for error in form.password.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-3">
-                {{ form.confirm_password.label(class="form-label") }}
-                {{ form.confirm_password(class="form-control", placeholder="Confirmar contraseña") }}
-                {% for error in form.confirm_password.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-            
-            <div class="col-md-3">
-                {{ form.idrol.label(class="form-label") }}
-                {{ form.idrol(class="form-select") }}
-                {% for error in form.idrol.errors %}
-                    <div class="text-danger">{{ error }}</div>
-                {% endfor %}
-            </div>
-       
-            
-        
+
             <!-- Botones -->
             <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>{{ form.submit.label.text }} 
-                    
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>{{ form.submit.label.text }}
                 </button>
                 <a href="{{ url_for('listaUsuario') }}" class="btn btn-secondary">
                     <i class="fas fa-times-circle me-1"></i> Cancelar
                 </a>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
 {% endblock %}

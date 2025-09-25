@@ -1,0 +1,58 @@
+{% extends "dashboard.html" %}
+
+{% block title %}Crear Rol - Salo Sport{% endblock %}
+
+{% block content %}
+
+<div class="card shadow">
+    <div class="card-header bg-dark text-white">
+        <h4 class="mb-0"><i class="fas fa-key me-2"></i> Registrar Nuevo Rol</h4>
+    </div>
+
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="row g-3">
+                <!-- Nombre del rol -->
+                <div class="col-md-6">
+                    {{ form.nombre.label(class="form-label fw-bold") }}
+                    {{ form.nombre(class="form-control", placeholder="Ej: Administrador") }}
+                    {% for error in form.nombre.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Descripción -->
+                <div class="col-md-6">
+                    {{ form.descripcion.label(class="form-label fw-bold") }}
+                    {{ form.descripcion(class="form-control", placeholder="Descripción del rol") }}
+                    {% for error in form.descripcion.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Estado -->
+                <div class="col-md-6">
+                    {{ form.estado.label(class="form-label fw-bold") }}
+                    {{ form.estado(class="form-select") }}
+                    {% for error in form.estado.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {{ form.submit.label.text }}
+                </button>
+                <a href="{{ url_for('listaRoles') }}" class="btn btn-secondary">
+                    <i class="fas fa-times-circle me-1"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

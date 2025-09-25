@@ -1,0 +1,83 @@
+{% extends "dashboard.html" %}
+
+{% block title %}Editar Usuario - Salo Sport{% endblock %}
+
+{% block content %}
+
+    <div class="card-header bg-dark text-white">
+        <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Editar Usuario</h4>
+    </div>
+                
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            <!-- ID oculto -->
+            <input type="hidden" name="idusuario" value="{{ usuario.idusuario }}">
+
+            <div class="row g-3">
+                <!-- Email -->
+                <div class="col-md-6">
+                    <label for="email" class="form-label fw-bold">
+                        <i class="fas fa-envelope me-2"></i>Email *
+                    </label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email }}" required>
+                    <div class="invalid-feedback">Ingrese un email válido</div>
+                </div>
+
+                <!-- Contraseña (opcional) -->
+                <div class="col-md-6">
+                    <label for="password" class="form-label fw-bold">
+                        <i class="fas fa-lock me-2"></i>Contraseña (dejar en blanco para no cambiar)
+                    </label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Nueva contraseña (opcional)">
+                </div>
+
+                <!-- Usuario -->
+                <div class="col-md-6">
+                    <label for="nombre" class="form-label fw-bold">
+                        <i class="fas fa-user-tie me-2"></i>Usuario
+                    </label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                    value="{{ usuario.nombre_completo }}" required>
+                </div>
+
+                <!-- Rol -->
+                <div class="col-md-6">
+                    <label for="idrol" class="form-label fw-bold">
+                        <i class="fas fa-key me-2"></i>Rol *
+                    </label>
+                    <select class="form-select" id="idrol" name="idrol" required>
+                        <option value="">Seleccionar rol</option>
+                            {% for rol in roles %}
+                        <option value="{{ rol.idrol }}" {% if rol.idrol == usuario.idrol %}selected{% endif %}>
+                            {{ rol.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">Seleccione un rol</div>
+                </div>
+
+                <!-- Estado -->
+                <div class="col-md-6">
+                    <label for="estado" class="form-label fw-bold">
+                        <i class="fas fa-toggle-on me-2"></i>Estado
+                    </label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="1" {% if usuario.estado == 1 %}selected{% endif %}>Activo</option>
+                        <option value="0" {% if usuario.estado == 0 %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Actualizar Usuario
+                </button>
+                <a href="{{ url_for('listaUsuario') }}" class="btn btn-secondary">
+                    <i class="fas fa-times-circle me-1"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}

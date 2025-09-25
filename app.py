@@ -14,6 +14,9 @@ import mysql.connector
 import threading
 import time
 from flask_socketio import SocketIO, emit
+from forms import RolForm
+
+
 
 # ================================
 # CONFIGURACIÓN DE LA APP
@@ -78,14 +81,25 @@ def login():
     if form.validate_on_submit():
         conn = conexion()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM usuario WHERE email = %s", (form.email.data,))
+
+        # Buscamos el usuario por email
+        cursor.execute("""
+            SELECT u.*, r.nombre AS rol_nombre 
+            FROM usuario u 
+            INNER JOIN rol r ON u.idrol = r.idrol 
+            WHERE u.email = %s """, (form.email.data,))
+
         usuario = cursor.fetchone()
         cerrar_conexion(conn)
 
         if usuario and check_password_hash(usuario['password_hash'], form.password.data):
+            # Guardamos info básica en sesión
             session['usuario_id'] = usuario['idusuario']
             session['usuario_email'] = usuario['email']
-            flash("Inicio de sesión exitoso", "success")
+            session['usuario_rol'] = usuario['rol_nombre']   # ✅ Guardamos el rol en sesión
+            session['rol_id'] = usuario['idrol']             # ✅ Guardamos idrol también
+
+            flash(f"Bienvenido {usuario['email']} - Rol: {usuario['rol_nombre']}", "success")
             return redirect(url_for("dashboard"))
         else:
             flash("Correo o contraseña incorrectos", "danger")
@@ -178,30 +192,20 @@ def handle_connect():
 # ================================
 @app.route('/usuarios')
 def listaUsuario():
-    """Lista todos los usuarios del sistema."""
     if 'usuario_id' not in session:
-        flash("Debes iniciar sesión para acceder a esta página.", "warning")
         return redirect(url_for('login'))
+
+    if session.get('usuario_rol') != 'Administrador':   # 👈 restringimos a solo admin
+        flash("No tienes permisos para acceder a Usuarios", "danger")
+        return redirect(url_for('dashboard'))
 
     conn = conexion()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT 
-            u.idusuario,
-            u.email,
-            u.estado,
-            r.nombre as rol_nombre,
-            r.idrol as rol_id,
-            u.nombres,
-            u.apellidos
-        FROM usuario u
-        LEFT JOIN rol r ON u.idrol = r.idrol
-        ORDER BY u.email ASC
-    """)
+    cursor.execute("SELECT * FROM usuario")
     usuarios = cursor.fetchall()
     cerrar_conexion(conn)
+    return render_template("usuarios/listaUsuario.html", usuarios=usuarios)
 
-    return render_template('usuarios/listaUsuario.html', usuarios=usuarios, title='Usuarios')
 
 @app.route('/usuarios/crear', methods=['GET', 'POST'])
 def crearUsuario():
@@ -249,7 +253,7 @@ def crearUsuario():
             conn.commit()
 
             flash("Usuario registrado exitosamente ✅", "success")
-            return redirect(url_for("lista_usuarios"))
+            return redirect(url_for("listaUsuario"))
 
         except Exception as e:
             conn.rollback()
@@ -265,7 +269,7 @@ def crearUsuario():
     )
 
 @app.route('/usuarios/editar/<int:id>', methods=['GET', 'POST'])
-def editar_usuario(id):
+def actualizarUsuario(id):
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
     
@@ -281,34 +285,50 @@ def editar_usuario(id):
     if request.method == 'POST':
         email = request.form['email']
         password = request.form.get('password', '')
+        nombre_completo = request.form['nombre']  # viene del input "Usuario"
         idrol = request.form.get('idrol', 2)
         estado = request.form.get('estado', 1)
-        
+
+        # separar nombre completo
+        partes = nombre_completo.strip().split(" ", 1)
+        nombres = partes[0]
+        apellidos = partes[1] if len(partes) > 1 else ""
+
         if password:  # Solo actualizar contraseña si se proporciona
             from werkzeug.security import generate_password_hash
             password_hash = generate_password_hash(password)
             cursor.execute("""
                 UPDATE usuario SET 
-                    email=%s, password_hash=%s, idrol=%s, estado=%s 
+                    email=%s, password_hash=%s, nombres=%s, apellidos=%s, idrol=%s, estado=%s 
                 WHERE idusuario=%s
-            """, (email, password_hash, idrol, estado, id))
+            """, (email, password_hash, nombres, apellidos, idrol, estado, id))
         else:
             cursor.execute("""
                 UPDATE usuario SET 
-                    email=%s, idrol=%s, estado=%s 
+                    email=%s, nombres=%s, apellidos=%s, idrol=%s, estado=%s 
                 WHERE idusuario=%s
-            """, (email, idrol, estado, id))
+            """, (email, nombres, apellidos, idrol, estado, id))
             
         conn.commit()
         flash("Usuario actualizado correctamente", "success")
         cerrar_conexion(conn)
         return redirect(url_for('listaUsuario'))
     
-    cursor.execute("SELECT * FROM usuario WHERE idusuario = %s", (id,))
+    # Cargar datos del usuario para el formulario
+    cursor.execute("""
+        SELECT *, CONCAT(nombres, ' ', apellidos) as nombre_completo 
+        FROM usuario 
+        WHERE idusuario = %s
+    """, (id,))
     usuario = cursor.fetchone()
     cerrar_conexion(conn)
     
-    return render_template('usuarios/editar.html', usuario=usuario, empleados=empleados, roles=roles, title='Editar Usuario')
+    return render_template(
+        'usuarios/actualizarUsuario.html',
+        usuario=usuario,
+        roles=roles,
+        title='Editar Usuario'
+    )
 
 @app.route('/usuarios/eliminar/<int:id>')
 def eliminar_usuario(id):
@@ -352,58 +372,93 @@ def listaRoles():
     """)
     roles = cursor.fetchall()
     cerrar_conexion(conn)
-    return render_template('usuarios/roles.html', roles=roles)
+    return render_template('roles/listaRoles.html', roles=roles) 
+    from forms import RolForm
 
 @app.route('/roles/crear', methods=['GET', 'POST'])
-def crear_rol():
+def crearRol():
+    # Verifica que el usuario esté logueado
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
-    
-    if request.method == 'POST':
-        nombre = request.form['nombre']
-        descripcion = request.form.get('descripcion', '')
-        estado = request.form.get('estado', 1)
-        
+
+    form = RolForm()
+
+    if form.validate_on_submit():
+        nombre = form.nombre.data
+        descripcion = form.descripcion.data
+        estado = int(form.estado.data)  # Asegúrate de convertir a entero si tu DB lo necesita
+
         conn = conexion()
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO rol (nombre, descripcion, estado) 
-            VALUES (%s, %s, %s)
-        """, (nombre, descripcion, estado))
-        conn.commit()
-        cerrar_conexion(conn)
-        
-        flash("Rol creado correctamente", "success")
-        return redirect(url_for('listaRoles'))
-    
-    return render_template('usuarios/crear_rol.html', title='Crear Rol')
+        try:
+            cursor.execute("""
+                INSERT INTO rol (nombre, descripcion, estado) 
+                VALUES (%s, %s, %s)
+            """, (nombre, descripcion, estado))
+            conn.commit()
+            flash("Rol creado correctamente", "success")
+        except Exception as e:
+            conn.rollback()
+            flash(f"Ocurrió un error: {e}", "danger")
+        finally:
+            cursor.close()
+            cerrar_conexion(conn)
 
-@app.route('/roles/editar/<int:id>', methods=['GET', 'POST'])
-def editar_rol(id):
+        return redirect(url_for('listaRoles'))
+
+    # Renderiza el formulario en GET o si la validación falla
+    return render_template('roles/crearRol.html', title='Crear Rol', form=form)
+
+@app.route('/roles/editar/<int:idrol>', methods=['GET', 'POST'])
+def actualizarRol(idrol):
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
-    
+
+    form = RolForm()
+
     conn = conexion()
     cursor = conn.cursor(dictionary=True)
-    
-    if request.method == 'POST':
-        nombre = request.form['nombre']
-        descripcion = request.form.get('descripcion', '')
-        estado = request.form.get('estado', 1)
-        
-        cursor.execute("""
-            UPDATE rol SET nombre=%s, descripcion=%s, estado=%s WHERE idrol=%s
-        """, (nombre, descripcion, estado, id))
-        conn.commit()
-        flash("Rol actualizado correctamente", "success")
-        cerrar_conexion(conn)
-        return redirect(url_for('listaRoles'))
-    
-    cursor.execute("SELECT * FROM rol WHERE idrol = %s", (id,))
+
+    # Obtener datos del rol existente
+    cursor.execute("SELECT * FROM rol WHERE idrol = %s", (idrol,))
     rol = cursor.fetchone()
+
+    if not rol:
+        cerrar_conexion(conn)
+        flash("El rol no existe", "warning")
+        return redirect(url_for('listaRoles'))
+
+    # Rellenar el formulario con los datos existentes en GET
+    if request.method == 'GET':
+        form.nombre.data = rol['nombre']
+        form.descripcion.data = rol['descripcion']
+        form.estado.data = str(rol['estado'])  # SelectField necesita str
+
+    if form.validate_on_submit():
+        nombre = form.nombre.data
+        descripcion = form.descripcion.data
+        estado = int(form.estado.data)
+
+        try:
+            cursor.execute("""
+                UPDATE rol
+                SET nombre=%s, descripcion=%s, estado=%s
+                WHERE idrol=%s
+            """, (nombre, descripcion, estado, idrol))
+            conn.commit()
+            flash("Rol actualizado correctamente", "success")
+        except Exception as e:
+            conn.rollback()
+            flash(f"Ocurrió un error: {e}", "danger")
+        finally:
+            cursor.close()
+            cerrar_conexion(conn)
+
+        return redirect(url_for('listaRoles'))
+
+    cursor.close()
     cerrar_conexion(conn)
-    
-    return render_template('usuarios/editar_rol.html', rol=rol, title='Editar Rol')
+    return render_template('roles/actualizarRol.html', title='Actualizar Rol', form=form, idrol=idrol)
 
 @app.route('/roles/eliminar/<int:id>')
 def eliminar_rol(id):
