@@ -1,14 +1,8 @@
-# app.py - Dashboard GesNet - Organizado y corregido
-# Autor: [Tu nombre]
-# Fecha: 2025
-
-# ================================
-# IMPORTS
-# ================================
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from conexion.conexion import conexion, cerrar_conexion
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import ProductoForm, UsuarioForm, LoginForm
+from flask_login import LoginManager, UserMixin, login_user, current_user
 from datetime import datetime
 import mysql.connector
 import threading
@@ -16,11 +10,7 @@ import time
 from flask_socketio import SocketIO, emit
 from forms import RolForm
 
-
-
-# ================================
 # CONFIGURACIÓN DE LA APP
-# ================================
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key'
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -30,10 +20,12 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 def inject_now():
     return {'now': datetime.utcnow}
 
-# ================================
-# FUNCIONES GLOBALES
-# ================================
+# ¡ESTO ES CLAVE!
+login_manager = LoginManager()
+login_manager.init_app(app)  # ← SIN ESTO, current_user NO EXISTE
+login_manager.login_view = 'login'
 
+# FUNCIONES GLOBALES
 def update_dashboard_data():
     """Actualiza los datos del dashboard en tiempo real cada 10 segundos."""
     while True:
@@ -61,6 +53,10 @@ threading.Thread(target=update_dashboard_data, daemon=True).start()
 # ================================
 # RUTAS PRINCIPALES
 # ================================
+# Cargar usuario (obligatorio para Flask-Login)
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 @app.route('/')
 def index():
@@ -79,37 +75,59 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        conn = conexion()
-        cursor = conn.cursor(dictionary=True)
+        conn = None
+        try:
+            conn = conexion()
+            cursor = conn.cursor(dictionary=True)
 
-        # Buscamos el usuario por email
-        cursor.execute("""
-            SELECT u.*, r.nombre AS rol_nombre 
-            FROM usuario u 
-            INNER JOIN rol r ON u.idrol = r.idrol 
-            WHERE u.email = %s """, (form.email.data,))
+            # Buscamos el usuario por email
+            cursor.execute("""
+                SELECT u.*, r.nombre AS rol_nombre 
+                FROM usuario u 
+                INNER JOIN rol r ON u.idrol = r.idrol 
+                WHERE u.email = %s 
+            """, (form.email.data,))
 
-        usuario = cursor.fetchone()
-        cerrar_conexion(conn)
+            usuario = cursor.fetchone()
 
-        if usuario and check_password_hash(usuario['password_hash'], form.password.data):
-            # Guardamos info básica en sesión
-            session['usuario_id'] = usuario['idusuario']
-            session['usuario_email'] = usuario['email']
-            session['usuario_rol'] = usuario['rol_nombre']   # ✅ Guardamos el rol en sesión
-            session['rol_id'] = usuario['idrol']             # ✅ Guardamos idrol también
+            # Validar: usuario existe, contraseña correcta Y estado = 1 (activo)
+            if usuario:
+                if usuario['estado'] == 0:
+                    # Usuario deshabilitado
+                    flash("Tu cuenta está deshabilitada. Contacta al administrador.", "warning")
+                elif check_password_hash(usuario['password_hash'], form.password.data):
+                    # Todo correcto: iniciar sesión
+                    session['usuario_id'] = usuario['idusuario']
+                    session['usuario_email'] = usuario['email']
+                    session['usuario_rol'] = usuario['rol_nombre']
+                    session['rol_id'] = usuario['idrol']
 
-            flash(f"Bienvenido {usuario['email']} - Rol: {usuario['rol_nombre']}", "success")
-            return redirect(url_for("dashboard"))
-        else:
-            flash("Correo o contraseña incorrectos", "danger")
+                    # En lugar de:
+                    # return redirect(url_for("dashboard"))
+
+                    # Haz:
+                    flash(f"Bienvenido ...", "success")
+                    return render_template("usuarios/login.html", form=form)
+                else:
+                    # Contraseña incorrecta
+                    flash("Correo o contraseña incorrectos", "danger")
+            else:
+                # Usuario no encontrado
+                flash("Correo o contraseña incorrectos", "danger")
+
+        except Exception as e:
+            app.logger.error(f"Error en login: {e}")
+            flash("Ocurrió un error. Inténtalo más tarde.", "danger")
+        finally:
+            if conn:
+                cerrar_conexion(conn)
 
     return render_template("usuarios/login.html", form=form)
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash("Has cerrado sesión correctamente.", "info")
+    #flash("Has cerrado sesión correctamente.")
     return redirect(url_for('login'))
 
 # ================================
@@ -151,7 +169,7 @@ def dashboard_api():
         cursor.execute("SELECT COUNT(*) AS count FROM cliente")
         clientes = cursor.fetchone()['count']
 
-        # ⚠️ Comentado temporalmente hasta crear tabla 'creditos'
+        # Comentado temporalmente hasta crear tabla 'creditos'
         # cursor.execute("SELECT COUNT(*) AS count FROM creditos WHERE estado = 'pendiente'")
         # creditos_pendientes = cursor.fetchone()['count']
 
@@ -195,78 +213,139 @@ def listaUsuario():
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('usuario_rol') != 'Administrador':   # 👈 restringimos a solo admin
+    if session.get('usuario_rol') != 'Administrador':
         flash("No tienes permisos para acceder a Usuarios", "danger")
         return redirect(url_for('dashboard'))
 
     conn = conexion()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM usuario")
+
+    # JOIN con tabla rol + manejo de estado
+    cursor.execute("""
+        SELECT 
+            u.idusuario,
+            CONCAT(u.nombres, ' ', u.apellidos) AS nombre_completo,  -- Nombre completo
+            u.email,
+            COALESCE(r.nombre, 'Sin rol') AS rol,                   -- Rol (o "Sin rol" si no tiene)
+            CASE 
+                WHEN u.estado = 1 THEN 'Activo'
+                ELSE 'Inactivo'
+            END AS estado                                       -- Estado como texto
+        FROM usuario u
+        LEFT JOIN rol r ON u.idrol = r.idrol
+    """)
+    
     usuarios = cursor.fetchall()
     cerrar_conexion(conn)
     return render_template("usuarios/listaUsuario.html", usuarios=usuarios)
 
+from flask import session, flash, redirect, url_for, render_template
+from werkzeug.security import generate_password_hash
 
 @app.route('/usuarios/crear', methods=['GET', 'POST'])
 def crearUsuario():
+    # Verificar autenticación y autorización
+    if 'usuario_id' not in session:
+        flash("Debes iniciar sesión para acceder a esta página.", "warning")
+        return redirect(url_for('login'))
+    
+    if session.get('usuario_rol') != 'Administrador':
+        flash("No tienes permisos para crear usuarios.", "danger")
+        return redirect(url_for('dashboard'))
+
     form = UsuarioForm()
 
-    # ----- Cargar catálogos -----
+    # ===== Cargar catálogos =====
+    conn = None
     try:
         conn = conexion()
         cur = conn.cursor(dictionary=True)
-
-        cur.execute("SELECT idrol, nombre FROM rol WHERE estado = 1")
-        form.idrol.choices = [(r['idrol'], r['nombre']) for r in cur.fetchall()]
-
-        cur.execute("SELECT idtipodoc, nombre FROM tipo_documento")
-        form.idtipodoc.choices = [(t['idtipodoc'], t['nombre']) for t in cur.fetchall()]
-
+        
+        # Cargar roles
+        cur.execute("SELECT idrol, nombre FROM rol WHERE estado = 1 ORDER BY nombre")
+        roles = cur.fetchall()
+        form.idrol.choices = [('', 'Selecciona un rol')] + [(str(r['idrol']), r['nombre']) for r in roles]
+        
+        # Cargar tipos de documento
+        cur.execute("SELECT idtipodoc, nombre FROM tipo_documento ORDER BY nombre")
+        docs = cur.fetchall()
+        form.idtipodoc.choices = [('', 'Selecciona')] + [(str(t['idtipodoc']), t['nombre']) for t in docs]
+        
     except Exception as e:
-        flash("Error al cargar datos de referencia", "danger")
-        app.logger.error(f"Error cargando roles/tipo docs: {e}")
+        app.logger.error(f"Error al cargar catálogos: {e}")
+        flash("Error al cargar los datos necesarios.", "danger")
+        return redirect(url_for('listaUsuario'))
     finally:
-        cerrar_conexion(conn)
+        if conn:
+            cerrar_conexion(conn)
 
-    # ----- Procesar formulario -----
+    # ===== Procesar formulario =====
     if form.validate_on_submit():
+        # Validar que los selects tengan valor
+        if not form.idrol.data or form.idrol.data == '':
+            flash("Por favor, selecciona un rol.", "danger")
+            return render_template("usuarios/crearUsuario.html", title="Nuevo Usuario", form=form)
+            
+        if not form.idtipodoc.data or form.idtipodoc.data == '':
+            flash("Por favor, selecciona un tipo de documento.", "danger")
+            return render_template("usuarios/crearUsuario.html", title="Nuevo Usuario", form=form)
+
+        # Validar unicidad del email Y del número de documento
+        conn = None
         try:
             conn = conexion()
             cur = conn.cursor()
+            
+            # Validar email duplicado
+            cur.execute("SELECT idusuario FROM usuario WHERE email = %s", (form.email.data.lower(),))
+            if cur.fetchone():
+                flash("El correo electrónico ya está registrado.", "warning")
+                return render_template("usuarios/crearUsuario.html", title="Nuevo Usuario", form=form)
 
+            # VALIDAR CÉDULA (NUM_DOCUMENTO) DUPLICADA
+            cur.execute("""
+                SELECT idusuario 
+                FROM usuario 
+                WHERE num_documento = %s AND idtipodoc = %s
+            """, (form.num_documento.data.strip(), int(form.idtipodoc.data)))
+            
+            if cur.fetchone():
+                flash("El número de documento ya está registrado con este tipo de documento.", "warning")
+                return render_template("usuarios/crearUsuario.html", title="Nuevo Usuario", form=form)
+
+            # Registrar usuario
             cur.execute("""
                 INSERT INTO usuario (
                     nombres, apellidos, idtipodoc, num_documento, telefono, email,
-                    direccion, password_hash, idrol
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    direccion, password_hash, idrol, estado
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 form.nombres.data.strip(),
                 form.apellidos.data.strip(),
-                form.idtipodoc.data,
+                int(form.idtipodoc.data),
                 form.num_documento.data.strip(),
                 form.telefono.data.strip(),
                 form.email.data.lower(),
                 form.direccion.data.strip(),
                 generate_password_hash(form.password.data),
-                form.idrol.data
+                int(form.idrol.data),
+                1  # estado activo
             ))
             conn.commit()
-
-            flash("Usuario registrado exitosamente ✅", "success")
-            return redirect(url_for("listaUsuario"))
-
+            flash("Usuario registrado exitosamente.", "success")
+            return redirect(url_for('listaUsuario'))
+            
         except Exception as e:
-            conn.rollback()
-            flash("Ocurrió un error al registrar el usuario.", "danger")
+            if conn:
+                conn.rollback()
             app.logger.error(f"Error al registrar usuario: {e}")
+            flash("Ocurrió un error al registrar el usuario. Intente nuevamente.", "danger")
         finally:
-            cerrar_conexion(conn)
-
-    return render_template(
-        "usuarios/crearUsuario.html",
-        title="Nuevo Usuario",
-        form=form
-    )
+            if conn:
+                cerrar_conexion(conn)
+    
+    # Renderizar formulario
+    return render_template("usuarios/crearUsuario.html", title="Nuevo Usuario", form=form)
 
 @app.route('/usuarios/editar/<int:id>', methods=['GET', 'POST'])
 def actualizarUsuario(id):
@@ -480,6 +559,11 @@ def eliminar_rol(id):
 
 @app.route('/productos')
 def listaProducto():
+    # Verificar inicio de sesión
+    if 'usuario_id' not in session:
+        flash("Debes iniciar sesión para acceder a esta página.", "warning")
+        return redirect(url_for('login'))
+
     q = request.args.get('q', '').strip()
     conn = conexion()
     cur = conn.cursor(dictionary=True)
@@ -490,7 +574,7 @@ def listaProducto():
                 p.idproducto, p.codigo, p.nombre, p.descripcion, 
                 c.nombre AS categoria, p.stock, p.precio_venta 
             FROM producto p
-            LEFT JOIN categoria c ON p.idcategoria = c.idcategoria   -- ← ¡CORREGIDO!
+            LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
             WHERE p.nombre LIKE %s
         """, (f"%{q}%",))
     else:
@@ -499,7 +583,7 @@ def listaProducto():
                 p.idproducto, p.codigo, p.nombre, p.descripcion, 
                 c.nombre AS categoria, p.stock, p.precio_venta 
             FROM producto p
-            LEFT JOIN categoria c ON p.idcategoria = c.idcategoria   -- ← ¡CORREGIDO!
+            LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
         """)
     
     productos = cur.fetchall()
@@ -576,6 +660,7 @@ def editar_producto(pid):
         cerrar_conexion(conn)
         return "Producto no encontrado", 404
 
+    # Inicializar el formulario con los datos actuales del producto, incluyendo 'estado'
     form = ProductoForm(data={
         'codigo': prod['codigo'],
         'nombre': prod['nombre'],
@@ -583,11 +668,12 @@ def editar_producto(pid):
         'idcategoria': prod['idcategoria'],
         'stock': prod['stock'],
         'precio_venta': prod['precio_venta'],
+        'estado': str(prod['estado'])  # ← Asegúrate de convertir a string si tus choices son strings
     })
     
     try:
         cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT idcategoria, nombre FROM categoria WHERE estado = 1 ORDER BY nombre")  # ← ¡CORREGIDO!
+        cur.execute("SELECT idcategoria, nombre FROM categoria WHERE estado = 1 ORDER BY nombre")
         categorias = cur.fetchall()
         form.idcategoria.choices = [('', 'Selecciona una categoría')] + \
             [(cat['idcategoria'], cat['nombre']) for cat in categorias]
@@ -602,7 +688,8 @@ def editar_producto(pid):
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE producto
-                SET codigo = %s, nombre = %s, descripcion = %s, idcategoria = %s, stock = %s, precio_venta = %s
+                SET codigo = %s, nombre = %s, descripcion = %s, idcategoria = %s, 
+                    stock = %s, precio_venta = %s, estado = %s
                 WHERE idproducto = %s
             """, (
                 form.codigo.data,
@@ -611,6 +698,7 @@ def editar_producto(pid):
                 form.idcategoria.data,
                 form.stock.data,
                 float(form.precio_venta.data),
+                int(form.estado.data),  # ← Guardar como entero (1 o 0)
                 pid
             ))
             conn.commit()
@@ -618,7 +706,7 @@ def editar_producto(pid):
             return redirect(url_for('listaProducto'))
         except Exception as e:
             conn.rollback()
-            form.nombre.errors.append(f'Error al actualizar: {str(e)}')
+            flash(f'Error al actualizar: {str(e)}', 'danger')
         finally:
             cerrar_conexion(conn)
 
@@ -626,6 +714,8 @@ def editar_producto(pid):
 
 @app.route('/productos/<int:pid>/eliminar', methods=['POST'])
 def eliminar_producto(pid):
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
     conn = conexion()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM producto WHERE idproducto = %s", (pid,))

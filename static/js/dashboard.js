@@ -48,3 +48,16 @@ $(document).ready(function () {
         });
     }
 });
+
+// Función para filtrar la tabla por búsqueda
+function filterTable() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.querySelector('table tbody'); // Ajusta si tu tabla tiene otro selector
+    const rows = table ? table.querySelectorAll('tr') : [];
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+    });
+}

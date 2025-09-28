@@ -22,18 +22,21 @@
                 
                 <div class="card-body">
                     
-                        <!-- Barra de búsqueda -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                    <input type="text" class="form-control" placeholder="Buscar por email o rol..." id="searchInput">
-                                    <button class="btn btn-outline-secondary" type="button" onclick="filterTable()">
-                                        <i class="fas fa-filter"></i>
-                                    </button>
-                                </div>
+                    <!-- Barra de búsqueda -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    placeholder="Buscar por email o rol..." 
+                                    id="searchInput"
+                                    oninput="filterTable()"
+                                >
                             </div>
                         </div>
+                    </div>
 
                         <!-- Tabla de Usuarios -->
                         <div class="table-responsive">
@@ -53,22 +56,14 @@
                                     {% for u in usuarios %}
                                     <tr>
                                         <td>{{ u.idusuario }}</td>
-                                        <td>{{ u.nombres }} {{ u.apellidos }}</td> 
+                                        <td>{{ u.nombre_completo }}</td>
                                         <td>{{ u.email }}</td>
+                                        <td><span class="badge bg-secondary">{{ u.rol }}</span></td>
                                         <td>
-                                            {% if u.rol_id == 1 %}
-                                                <span class="badge bg-danger">ADMINISTRADOR</span>
-                                            {% elif u.rol_id == 2 %}
-                                                <span class="badge bg-primary">CAJERO</span>
+                                            {% if u.estado == 'Activo' %}
+                                                <span class="badge bg-success">{{ u.estado }}</span>
                                             {% else %}
-                                                <span class="badge bg-secondary">{{ u.rol_nombre or 'Sin rol' }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if u.estado == 1 %}
-                                                <span class="badge bg-success">Activo</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">Inactivo</span>
+                                                <span class="badge bg-danger">{{ u.estado }}</span>
                                             {% endif %}
                                         </td>
                                         <td class="text-center">
@@ -109,8 +104,7 @@
                                     </a>
                                 </li>
                             </ul>
-                        </nav>
-                        
+                        </nav>   
                 </div>
             </div>
         </div>

@@ -4,22 +4,10 @@
 {% block content %}
 
 <!-- Carrusel de fotos - Full Screen -->
-<div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-indicators">
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
-    </div>
-
-    <div class="carousel-inner" style="height: 100vh;">
-        <!-- Slide 1 -->
-        <div class="container-fluid px-0">
-            <img src="{{ url_for('static', filename='img/sublimacion.jpg') }}" 
-                alt="Bordados personalizados" 
-                class="d-block w-100 h-100" 
-                style="object-fit: cover; height: 80vh; max-height: 600px;">
-        </div>
-    </div>
+<div style="height: 100vh; max-height: 634px; overflow: hidden; margin: 0; padding: 0;">
+    <img src="{{ url_for('static', filename='img/bordados.jpg') }}" 
+         alt="Bordados personalizados"
+         style="width: 100vw; height: 100%; object-fit: cover; object-position: center; display: block;">
 </div>
 
 <!-- Sección de texto -->

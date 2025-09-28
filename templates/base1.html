@@ -20,7 +20,7 @@
             <!-- Logo -->
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <img src="{{ url_for('static', filename='img/logoEmpresa.png') }}" alt="Salo" width="40" height="40">
-            </a>
+            </a>  
 
             <!-- Botón hamburguesa para móvil -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -75,18 +75,10 @@
                 </div>
             </div>
         </div>
-    </nav>  <!-- ✅ ¡Navbar cerrado correctamente! -->
-
-    <!-- Banner Principal -->
-    <div class="container-fluid px-0">
-        <img src="{{ url_for('static', filename='img/banner-salo.jpg') }}" 
-             alt="Personaliza tu uniforme" 
-             class="img-fluid w-100" 
-             style="max-height: 600px; object-fit: cover;">
-    </div>
+    </nav>  <!--¡Navbar cerrado correctamente! -->
 
     <!-- Contenido principal -->
-    <main class="container-fluid py-4">
+   <main class="container-fluid py-4 px-0" style="width: 100vw; margin-left: 0; margin-right: 0;">
         <div class="text-center">
             {% block content %}
                 <div class="row justify-content-center">

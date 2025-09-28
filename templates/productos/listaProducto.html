@@ -8,7 +8,7 @@
     
         <div class="col-12">
             <!-- Contenedor principal con borde -->
-            <div class="card border-0 shadow-sm" style="border: 1px solid rgba(227, 29, 65, 0.1); border-radius: 12px; overflow: hidden;">
+            <div>
                 
                 <!-- Breadcrumb -->
                 <nav aria-label="breadcrumb" class="mb-3 border-bottom">
@@ -38,29 +38,32 @@
                 </div>
 
                 <!-- Barra de búsqueda y filtros -->
-                <div class="row mb-3 px-3">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            <input type="text" class="form-control" placeholder="Buscar por código, nombre o categoría..." id="searchInput">
-                            <button class="btn btn-outline-secondary" type="button" onclick="filterTable()">
-                                <i class="fas fa-filter"></i> Filtrar
-                            </button>
+                    <div class="row mb-3 px-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    placeholder="Buscar por código, nombre o categoría..." 
+                                    id="searchInput"
+                                    oninput="filterTable()"
+                                >
+                            </div>
+                        </div>
+                    
+                        <div class="col-md-6 text-end">
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+                                <label class="me-2 fw-bold">Mostrar:</label>
+                                <select class="form-select form-select-sm w-auto" id="pageSize">
+                                    <option value="10">10 registros</option>
+                                    <option value="25">25 registros</option>
+                                    <option value="50">50 registros</option>
+                                    <option value="100">100 registros</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6 text-end">
-                        <div class="d-flex justify-content-end align-items-center gap-2">
-                            <label class="me-2 fw-bold">Mostrar:</label>
-                            <select class="form-select form-select-sm w-auto" id="pageSize">
-                                <option value="10">10 registros</option>
-                                <option value="25">25 registros</option>
-                                <option value="50">50 registros</option>
-                                <option value="100">100 registros</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Tabla de Productos -->
                 <div class="px-3 pb-3">
                     <div class="table-responsive">
@@ -103,9 +106,6 @@
                                         <a href="{{ url_for('editar_producto', pid=p.idproducto) }}" class="btn btn-sm btn-outline-primary me-1" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{{ url_for('eliminar_producto', pid=p.idproducto) }}" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este producto?')">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
                                     </td>
                                 </tr>
                                 {% else %}
@@ -144,43 +144,4 @@
             </div>
         </div>
     
-
-
-<script>
-    // Función para filtrar la tabla por búsqueda
-    function filterTable() {
-        const input = document.getElementById("searchInput");
-        const filter = input.value.toUpperCase();
-        const table = document.getElementById("productosTableBody");
-        const rows = table.getElementsByTagName("tr");
-
-        for (let i = 0; i < rows.length; i++) {
-            let match = false;
-            const cells = rows[i].getElementsByTagName("td");
-            
-            for (let j = 0; j < cells.length - 1; j++) { // Excluimos la columna de acciones
-                const cell = cells[j];
-                if (cell) {
-                    const txtValue = cell.textContent || cell.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        match = true;
-                        break;
-                    }
-                }
-            }
-            
-            rows[i].style.display = match ? "" : "none";
-        }
-    }
-
-    // Evento para filtrar cuando se escribe
-    document.getElementById("searchInput").addEventListener("keyup", filterTable);
-    
-    // Evento para cambiar el número de registros por página
-    document.getElementById("pageSize").addEventListener("change", function() {
-        // Aquí podrías implementar la paginación real
-        alert("Mostrando " + this.value + " registros por página");
-    });
-</script>
-
 {% endblock %}
